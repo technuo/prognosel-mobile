@@ -50,11 +50,35 @@ export async function fetchForecastsFromApi(
 }
 
 export async function fetchCurrentPrice(zone: ZoneCode): Promise<CurrentPrice> {
-  const res = await fetch(`${API_BASE}/current-price/${zone}`, {
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error("Failed to fetch current price");
-  return res.json();
+  try {
+    const res = await fetch(`${API_BASE}/current-price/${zone}`, {
+      cache: "no-store",
+    });
+    if (res.ok) return res.json();
+    throw new Error("FastAPI current price failed");
+  } catch {
+    // Fallback: use latest forecast from Supabase
+    const { data, error } = await supabase
+      .from("forecasts")
+      .select("timestamp, predicted_price")
+      .eq("zone", zone)
+      .eq("horizon_hours", 1)
+      .order("timestamp", { ascending: false })
+      .limit(1)
+      .single();
+
+    if (error || !data) {
+      throw new Error("Failed to fetch current price from all sources");
+    }
+
+    return {
+      zone,
+      price_eur_mwh: data.predicted_price,
+      price_sek_kwh: eurMwhToRetailSekKwh(data.predicted_price),
+      timestamp: data.timestamp,
+      source: "supabase-fallback",
+    };
+  }
 }
 
 export async function fetchZoneStats(
