@@ -40,7 +40,7 @@ function generateTips(forecast24h: ForecastRecord[], zone: ZoneCode): Tip[] {
 
   // Tip 1: cheapest single hour
   if (cheapest) {
-    const saving = Math.max(0, mostExpensive.price - cheapest.price) * 2; // ~2 kWh dishwasher
+    const saving = Math.max(0, mostExpensive.price - cheapest.price) * 2 / 100; // ~2 kWh dishwasher → SEK
     tips.push({
       icon: "💡",
       text: `Run dishwasher after ${String(cheapest.hour).padStart(2, "0")}:00 — save ~${saving.toFixed(0)} SEK`,
@@ -54,7 +54,7 @@ function generateTips(forecast24h: ForecastRecord[], zone: ZoneCode): Tip[] {
   if (cheapest3.length >= 3) {
     const start = cheapest3[0].hour;
     const end = cheapest3[cheapest3.length - 1].hour;
-    const saving = Math.max(0, mostExpensive.price - cheapest3[0].price) * 30; // ~30 kWh EV charge
+    const saving = Math.max(0, mostExpensive.price - cheapest3[0].price) * 30 / 100; // ~30 kWh EV charge → SEK
     tips.push({
       icon: "🔋",
       text: `Best EV charging window: ${String(start).padStart(2, "0")}:00–${String(end + 1).padStart(2, "0")}:00`,
@@ -141,7 +141,7 @@ export default function HomePage() {
       const ts = new Date(r.timestamp);
       return {
         h: ts.getHours().toString().padStart(2, "0"),
-        p: eurMwhToRetailSekKwh(r.predicted_price), // EUR/MWh → retail SEK/kWh
+        p: eurMwhToRetailSekKwh(r.predicted_price), // EUR/MWh → retail öre/kWh
       };
     });
   }, [forecast24h]);
@@ -174,7 +174,7 @@ export default function HomePage() {
               <span className="font-serif text-5xl font-bold text-ink tracking-tighter leading-none">
                 {currentPrice?.toFixed(2) ?? "--"}
               </span>
-              <span className="text-base text-muted font-medium">SEK{t.perKwh}</span>
+              <span className="text-base text-muted font-medium">öre{t.perKwh}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-[13px] text-good font-semibold bg-good/10 px-2.5 py-0.5 rounded-full">
@@ -201,19 +201,19 @@ export default function HomePage() {
           <div className="flex gap-2.5 mb-5">
             <MetricCard
               label={t.min}
-              value={stats ? stats.min_price.toFixed(2) : "--"}
-              unit=" SEK"
+              value={stats ? stats.min_price.toFixed(0) : "--"}
+              unit=" öre"
               sub={stats ? `at ${stats.min_time}` : undefined}
             />
             <MetricCard
               label={t.avg}
-              value={stats ? stats.avg_price.toFixed(2) : "--"}
-              unit=" SEK"
+              value={stats ? stats.avg_price.toFixed(0) : "--"}
+              unit=" öre"
             />
             <MetricCard
               label={t.max}
-              value={stats ? stats.max_price.toFixed(2) : "--"}
-              unit=" SEK"
+              value={stats ? stats.max_price.toFixed(0) : "--"}
+              unit=" öre"
               sub={stats ? `at ${stats.max_time}` : undefined}
             />
             <MetricCard

@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       `Your tone is warm, concise, and helpful — like a knowledgeable neighbor.\n\n` +
       `Current context:\n` +
       `- Zone: ${zone || "SE3"}\n` +
-      `- Current price: ${currentPrice ?? "unknown"} SEK/kWh\n\n` +
+      `- Current price: ${currentPrice ?? "unknown"} öre/kWh\n\n` +
       `Guidelines:\n` +
       `1. Base answers on the data provided. Don't make up prices.\n` +
       `2. Give specific, actionable advice (what time, how much, potential savings).\n` +

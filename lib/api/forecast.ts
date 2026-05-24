@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase/client";
-import { eurMwhToRetailSekKwh } from "@/lib/pricing";
+import { eurMwhToWholesaleSekKwh } from "@/lib/pricing";
 import type { ZoneCode, ForecastRecord, ZoneStats } from "@/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -74,7 +74,7 @@ export async function fetchCurrentPrice(zone: ZoneCode): Promise<CurrentPrice> {
     return {
       zone,
       price_eur_mwh: data.predicted_price,
-      price_sek_kwh: eurMwhToRetailSekKwh(data.predicted_price),
+      price_sek_kwh: eurMwhToWholesaleSekKwh(data.predicted_price),
       timestamp: data.timestamp,
       source: "supabase-fallback",
     };
@@ -105,7 +105,7 @@ export async function fetchZoneStats(
       throw new Error("Failed to fetch zone stats from all sources");
     }
 
-    const prices = data.map((r) => eurMwhToRetailSekKwh(r.predicted_price));
+    const prices = data.map((r) => eurMwhToWholesaleSekKwh(r.predicted_price));
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
     const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
@@ -120,7 +120,7 @@ export async function fetchZoneStats(
       max_price: maxPrice,
       min_time: minRecord ? new Date(minRecord.timestamp).toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" }) : "--:--",
       max_time: maxRecord ? new Date(maxRecord.timestamp).toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" }) : "--:--",
-      currency: "SEK",
+      currency: "öre",
       period_hours: hours,
     };
   }

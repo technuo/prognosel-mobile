@@ -185,7 +185,7 @@ export default function PlannerPage() {
               <div className={`font-serif text-xl font-semibold ${stat.color}`}>
                 {stat.value}
               </div>
-              <div className="text-[10px] text-muted">SEK</div>
+              <div className="text-[10px] text-muted">öre</div>
             </div>
           ))}
         </div>
@@ -208,7 +208,7 @@ export default function PlannerPage() {
                   className="text-[10px] font-mono font-semibold"
                   style={{ color: getHeatColor(price, dayMin, dayMax) }}
                 >
-                  {price.toFixed(2)}
+                  {price.toFixed(0)}
                 </span>
               </div>
             ))}
@@ -249,14 +249,14 @@ export default function PlannerPage() {
                   <div className="font-serif text-lg font-semibold text-good">
                     {w.price.toFixed(2)}
                   </div>
-                  <div className="text-[10px] text-muted">SEK/kWh</div>
+                  <div className="text-[10px] text-muted">öre/kWh</div>
                 </div>
               </div>
             ))}
           </div>
           <div className="mt-4 p-3 bg-accent-soft/50 rounded-xl">
             <p className="text-sm text-accent-hi font-medium">
-              Save ~{((dayMax - dayMin) * 2).toFixed(0)} SEK vs peak pricing
+              Save ~{((dayMax - dayMin) * 2 / 100).toFixed(0)} SEK vs peak pricing
             </p>
             <p className="text-xs text-muted mt-0.5">
               By running appliances during the cheapest 3-hour window

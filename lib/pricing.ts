@@ -11,24 +11,28 @@
 
 const EUR_SEK_RATE = 11.5;
 
-/** Convert EUR/MWh wholesale → retail SEK/kWh. */
-export function eurMwhToRetailSekKwh(eurMwh: number): number {
-  const wholesaleSekKwh = (eurMwh * EUR_SEK_RATE) / 1000;
-  return toRetailPrice(wholesaleSekKwh);
+/** Convert EUR/MWh → wholesale SEK/kWh (no retail markup). */
+export function eurMwhToWholesaleSekKwh(eurMwh: number): number {
+  return (eurMwh * EUR_SEK_RATE) / 1000;
 }
 
-/** Convert wholesale SEK/kWh → retail SEK/kWh. */
+/** Convert EUR/MWh wholesale → retail öre/kWh. */
+export function eurMwhToRetailSekKwh(eurMwh: number): number {
+  return toRetailPrice(eurMwhToWholesaleSekKwh(eurMwh));
+}
+
+/** Convert wholesale SEK/kWh → retail öre/kWh. */
 export function toRetailPrice(wholesaleSekKwh: number): number {
   const factor = parseFloat(
     process.env.NEXT_PUBLIC_RETAIL_PRICE_FACTOR || "1.2"
   );
-  return wholesaleSekKwh * factor;
+  return wholesaleSekKwh * factor * 100; // öre/kWh
 }
 
-/** Convert retail SEK/kWh back to wholesale (for editing/settings). */
-export function toWholesalePrice(retailSekKwh: number): number {
+/** Convert retail öre/kWh back to wholesale SEK/kWh (for editing/settings). */
+export function toWholesalePrice(retailOreKwh: number): number {
   const factor = parseFloat(
     process.env.NEXT_PUBLIC_RETAIL_PRICE_FACTOR || "1.2"
   );
-  return retailSekKwh / factor;
+  return retailOreKwh / factor / 100;
 }
