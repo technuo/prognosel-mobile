@@ -15,13 +15,44 @@ export default function DashboardLayout({
   const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) {
-        router.replace("/login/");
-      } else {
+    let isMounted = true;
+    let redirectTimer: ReturnType<typeof setTimeout>;
+
+    async function handleAuth() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!isMounted) return;
+      if (user) {
+        setChecking(false);
+        return;
+      }
+
+      // Wait for async OAuth code exchange before redirecting
+      redirectTimer = setTimeout(async () => {
+        const { data: { user: retryUser } } = await supabase.auth.getUser();
+        if (!isMounted) return;
+        if (!retryUser) {
+          router.replace("/login/");
+        } else {
+          setChecking(false);
+        }
+      }, 2000);
+    }
+
+    handleAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (!isMounted) return;
+      if (event === "SIGNED_IN") {
+        clearTimeout(redirectTimer);
         setChecking(false);
       }
     });
+
+    return () => {
+      isMounted = false;
+      clearTimeout(redirectTimer);
+      subscription.unsubscribe();
+    };
   }, [router]);
 
   if (checking) {
