@@ -110,8 +110,8 @@ export async function fetchZoneStats(
     const maxPrice = Math.max(...prices);
     const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
 
-    const minRecord = data.find((r) => eurMwhToRetailSekKwh(r.predicted_price) === minPrice);
-    const maxRecord = data.find((r) => eurMwhToRetailSekKwh(r.predicted_price) === maxPrice);
+    const minRecord = data.find((r) => eurMwhToWholesaleSekKwh(r.predicted_price) === minPrice);
+    const maxRecord = data.find((r) => eurMwhToWholesaleSekKwh(r.predicted_price) === maxPrice);
 
     return {
       zone,
