@@ -32,7 +32,13 @@ export async function fetchForecasts(
     return fetchForecastsFromApi(zone, horizon, limit);
   }
 
-  return (data as ForecastRecord[]) || [];
+  // predicted_price is stored as SEK/MWh (DataProcessor converts EUR->SEK).
+  // Convert to EUR/MWh so all pricing helpers work correctly.
+  const records = (data as ForecastRecord[]) || [];
+  records.forEach((r) => {
+    r.predicted_price = r.predicted_price / 11.5;
+  });
+  return records;
 }
 
 // ── FastAPI Fallback ───────────────────────────────────────────────────────
@@ -71,10 +77,13 @@ export async function fetchCurrentPrice(zone: ZoneCode): Promise<CurrentPrice> {
       throw new Error("Failed to fetch current price from all sources");
     }
 
+    // predicted_price in Supabase is SEK/MWh (DataProcessor converts EUR→SEK).
+    // Convert back to EUR/MWh so pricing.ts helpers work correctly.
+    const priceEurMwh = data.predicted_price / 11.5;
     return {
       zone,
-      price_eur_mwh: data.predicted_price,
-      price_sek_kwh: eurMwhToWholesaleSekKwh(data.predicted_price),
+      price_eur_mwh: priceEurMwh,
+      price_sek_kwh: eurMwhToWholesaleSekKwh(priceEurMwh),
       timestamp: data.timestamp,
       source: "supabase-fallback",
     };
@@ -105,13 +114,14 @@ export async function fetchZoneStats(
       throw new Error("Failed to fetch zone stats from all sources");
     }
 
-    const prices = data.map((r) => eurMwhToWholesaleSekKwh(r.predicted_price));
+    // predicted_price in Supabase is SEK/MWh; convert to EUR/MWh for pricing helpers
+    const prices = data.map((r) => eurMwhToWholesaleSekKwh(r.predicted_price / 11.5));
     const minPrice = Math.min(...prices);
     const maxPrice = Math.max(...prices);
     const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
 
-    const minRecord = data.find((r) => eurMwhToWholesaleSekKwh(r.predicted_price) === minPrice);
-    const maxRecord = data.find((r) => eurMwhToWholesaleSekKwh(r.predicted_price) === maxPrice);
+    const minRecord = data.find((r) => eurMwhToWholesaleSekKwh(r.predicted_price / 11.5) === minPrice);
+    const maxRecord = data.find((r) => eurMwhToWholesaleSekKwh(r.predicted_price / 11.5) === maxPrice);
 
     return {
       zone,
