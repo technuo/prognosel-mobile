@@ -6,11 +6,10 @@ import { useLanguage } from "@/hooks/use-language";
 import { useZone } from "@/hooks/use-zone";
 import { ZoneBadge } from "@/components/ui/zone-badge";
 import { useCurrentPrice } from "@/hooks/use-current-price";
-import { useForecast } from "@/hooks/use-forecast";
+import { useWeeklyPrices } from "@/hooks/use-weekly-prices";
 import { useStats } from "@/hooks/use-stats";
 import { useTasks } from "@/hooks/use-tasks";
-import { eurMwhToRetailSekKwh } from "@/lib/pricing";
-import type { ZoneCode, ForecastRecord } from "@/types";
+import type { ZoneCode, HourlyPrice } from "@/types";
 
 interface Tip {
   icon: string;
@@ -20,12 +19,13 @@ interface Tip {
   estimatedSavings: number;
 }
 
-function generateTips(forecast24h: ForecastRecord[], zone: ZoneCode): Tip[] {
-  if (!forecast24h.length) return [];
+function generateTips(hours: HourlyPrice[], zone: ZoneCode): Tip[] {
+  const valid = hours.filter((h) => h.price > 0);
+  if (!valid.length) return [];
 
-  const prices = forecast24h.map((r) => ({
-    hour: new Date(r.timestamp).getHours(),
-    price: eurMwhToRetailSekKwh(r.predicted_price),
+  const prices = valid.map((h) => ({
+    hour: h.hour,
+    price: h.price,
   }));
 
   if (prices.length === 0) return [];
@@ -130,28 +130,33 @@ export default function HomePage() {
 
   // Fetch real data using the selected zone
   const { price: currentPrice, loading: priceLoading } = useCurrentPrice(zone);
-  const { data: forecast24h, loading: forecastLoading } = useForecast(zone, 24);
+  const { data: weekData, loading: weekLoading } = useWeeklyPrices(zone);
   const { stats, loading: statsLoading } = useStats(zone, 24);
   const { totalSavings, addTask } = useTasks(zone);
 
-  // Build chart data from forecast records
-  const chartData = useMemo(() => {
-    if (!forecast24h.length) return [];
-    return forecast24h.slice(0, 24).map((r) => {
-      const ts = new Date(r.timestamp);
-      return {
-        h: ts.getHours().toString().padStart(2, "0"),
-        p: eurMwhToRetailSekKwh(r.predicted_price), // EUR/MWh → retail öre/kWh
-      };
-    });
-  }, [forecast24h]);
+  // Find today's data from the weekly view
+  const today = useMemo(() => {
+    const now = new Date();
+    const todayKey = now.toLocaleDateString("sv-SE", { timeZone: "Europe/Stockholm" });
+    return weekData.find((d) => d.date === todayKey);
+  }, [weekData]);
 
-  const isLoading = priceLoading || forecastLoading || statsLoading;
+  // Build chart data from today's actual hourly prices
+  const chartData = useMemo(() => {
+    if (!today || !today.hasData) return [];
+    return today.hours.map((h) => ({
+      h: String(h.hour).padStart(2, "0"),
+      p: h.price,
+    }));
+  }, [today]);
+
+  const forecastLoading = weekLoading;
+  const isLoading = priceLoading || weekLoading || statsLoading;
 
   const minPrice = chartData.length ? Math.min(...chartData.map((d) => d.p)) : 0;
   const maxPrice = chartData.length ? Math.max(...chartData.map((d) => d.p)) : 0;
 
-  const tips = useMemo(() => generateTips(forecast24h, zone), [forecast24h, zone]);
+  const tips = useMemo(() => generateTips(today?.hours || [], zone), [today, zone]);
 
   return (
     <div className="animate-fade-in">
@@ -229,13 +234,13 @@ export default function HomePage() {
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-serif text-lg font-semibold text-ink">{t.forecast}</h3>
             <span className="text-[11px] font-mono text-faint bg-paper-2 px-2.5 py-0.5 rounded-full">
-              {zone} · t+24h
+              {zone} · today
             </span>
           </div>
 
           {chartData.length === 0 ? (
             <div className="h-[120px] flex items-center justify-center text-faint text-sm">
-              {forecastLoading ? "Loading forecast..." : "No forecast data available"}
+              {forecastLoading ? "Loading prices..." : "No price data available"}
             </div>
           ) : (
             <div className="flex items-end gap-[3px] h-[120px] pb-6 relative">
