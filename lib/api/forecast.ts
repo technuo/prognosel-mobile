@@ -19,17 +19,25 @@ export async function fetchForecasts(
   horizon: 1 | 24 | 168,
   limit: number = 168
 ): Promise<ForecastRecord[]> {
+  const todayUtc = new Date().toISOString();
+
   const { data, error } = await supabase
     .from("forecasts")
     .select("*")
     .eq("zone", zone)
     .eq("horizon_hours", horizon)
+    .gte("timestamp", todayUtc)
     .order("timestamp", { ascending: true })
     .limit(limit);
 
   if (error) {
     console.error("Supabase forecasts error:", error);
     // Fallback to FastAPI
+    return fetchForecastsFromApi(zone, horizon, limit);
+  }
+
+  // If Supabase has no future data, fallback to API
+  if (!data || data.length === 0) {
     return fetchForecastsFromApi(zone, horizon, limit);
   }
 

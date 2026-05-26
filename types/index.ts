@@ -40,6 +40,22 @@ export interface DayForecast {
   hours: number[];
 }
 
+export interface HourlyPrice {
+  hour: number;
+  price: number;
+}
+
+export interface DayPriceData {
+  date: string;
+  dayName: string;
+  dayLabel: string;
+  hours: HourlyPrice[];
+  minPrice: number;
+  maxPrice: number;
+  avgPrice: number;
+  hasData: boolean;
+}
+
 export interface SmartTip {
   icon: string;
   text: string;

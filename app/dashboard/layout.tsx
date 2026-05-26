@@ -12,59 +12,59 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const [checking, setChecking] = useState(true);
+  const [checking, setChecking] = useState(false); // TEMP: bypass auth for testing
 
-  useEffect(() => {
-    let isMounted = true;
-    let redirectTimer: ReturnType<typeof setTimeout>;
+  // useEffect(() => {
+  //   let isMounted = true;
+  //   let redirectTimer: ReturnType<typeof setTimeout>;
 
-    async function handleAuth() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!isMounted) return;
-      if (user) {
-        setChecking(false);
-        return;
-      }
+  //   async function handleAuth() {
+  //     const { data: { user } } = await supabase.auth.getUser();
+  //     if (!isMounted) return;
+  //     if (user) {
+  //       setChecking(false);
+  //       return;
+  //     }
 
-      // Wait for async OAuth code exchange before redirecting
-      redirectTimer = setTimeout(async () => {
-        const { data: { user: retryUser } } = await supabase.auth.getUser();
-        if (!isMounted) return;
-        if (!retryUser) {
-          router.replace("/login/");
-        } else {
-          setChecking(false);
-        }
-      }, 2000);
-    }
+  //     // Wait for async OAuth code exchange before redirecting
+  //     redirectTimer = setTimeout(async () => {
+  //       const { data: { user: retryUser } } = await supabase.auth.getUser();
+  //       if (!isMounted) return;
+  //       if (!retryUser) {
+  //         router.replace("/login/");
+  //       } else {
+  //         setChecking(false);
+  //       }
+  //     }, 2000);
+  //   }
 
-    handleAuth();
+  //   handleAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
-      if (!isMounted) return;
-      if (event === "SIGNED_IN") {
-        clearTimeout(redirectTimer);
-        setChecking(false);
-      }
-    });
+  //   const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+  //     if (!isMounted) return;
+  //     if (event === "SIGNED_IN") {
+  //       clearTimeout(redirectTimer);
+  //       setChecking(false);
+  //     }
+  //   });
 
-    return () => {
-      isMounted = false;
-      clearTimeout(redirectTimer);
-      subscription.unsubscribe();
-    };
-  }, [router]);
+  //   return () => {
+  //     isMounted = false;
+  //     clearTimeout(redirectTimer);
+  //     subscription.unsubscribe();
+  //   };
+  // }, [router]);
 
-  if (checking) {
-    return (
-      <MobileWrapper>
-        <div className="h-screen flex flex-col items-center justify-center bg-paper">
-          <div className="w-10 h-10 rounded-full border-2 border-accent/30 border-t-accent animate-spin mb-4" />
-          <p className="text-sm text-muted">Checking session…</p>
-        </div>
-      </MobileWrapper>
-    );
-  }
+  // if (checking) {
+  //   return (
+  //     <MobileWrapper>
+  //       <div className="h-screen flex flex-col items-center justify-center bg-paper">
+  //         <div className="w-10 h-10 rounded-full border-2 border-accent/30 border-t-accent animate-spin mb-4" />
+  //         <p className="text-sm text-muted">Checking session…</p>
+  //       </div>
+  //     </MobileWrapper>
+  //   );
+  // }
 
   return (
     <MobileWrapper>

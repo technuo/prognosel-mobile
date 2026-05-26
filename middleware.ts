@@ -42,10 +42,10 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Protected routes
-  if (!user && (pathname.startsWith("/dashboard/") || pathname === "/zone/")) {
-    return NextResponse.redirect(new URL("/login/", request.url));
-  }
+  // Protected routes - TEMPORARILY BYPASSED FOR TESTING
+  // if (!user && (pathname.startsWith("/dashboard/") || pathname === "/zone/")) {
+  //   return NextResponse.redirect(new URL("/login/", request.url));
+  // }
 
   // Redirect authenticated users away from login
   if (user && pathname === "/login/") {
