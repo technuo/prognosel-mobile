@@ -4,6 +4,7 @@ import type { ZoneCode, ForecastRecord, ZoneStats } from "@/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const NORDAPI_BASE = "https://nordapi.ee/api/v1";
+const FETCH_TIMEOUT_MS = 5000; // 5-second timeout for all external fetches
 
 export interface CurrentPrice {
   zone: string;
@@ -11,6 +12,22 @@ export interface CurrentPrice {
   price_sek_kwh: number;
   timestamp: string;
   source: string;
+}
+
+/** Fetch with timeout to prevent hanging on cold Render backend. */
+export async function fetchWithTimeout(
+  url: string,
+  options: RequestInit = {},
+  timeoutMs: number = FETCH_TIMEOUT_MS
+): Promise<Response> {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    return res;
+  } finally {
+    clearTimeout(id);
+  }
 }
 
 // ── Supabase: forecasts table (public read) ────────────────────────────────
@@ -56,7 +73,7 @@ export async function fetchForecastsFromApi(
   horizon: 1 | 24 | 168,
   limit: number = 168
 ): Promise<ForecastRecord[]> {
-  const res = await fetch(
+  const res = await fetchWithTimeout(
     `${API_BASE}/forecast/${zone}/${horizon}?limit=${limit}`,
     { cache: "no-store" }
   );
@@ -67,7 +84,7 @@ export async function fetchForecastsFromApi(
 // ── NordAPI.ee: real-time current price ────────────────────────────────────
 async function fetchNordapiCurrentPrice(zone: ZoneCode): Promise<CurrentPrice | null> {
   try {
-    const res = await fetch(`${NORDAPI_BASE}/electricity/current/${zone}`, {
+    const res = await fetchWithTimeout(`${NORDAPI_BASE}/electricity/current/${zone}`, {
       cache: "no-store",
     });
     if (!res.ok) return null;
@@ -94,7 +111,7 @@ async function fetchNordapiZoneStats(
   hours: number = 24
 ): Promise<ZoneStats | null> {
   try {
-    const res = await fetch(`${NORDAPI_BASE}/electricity/today/${zone}`, {
+    const res = await fetchWithTimeout(`${NORDAPI_BASE}/electricity/today/${zone}`, {
       cache: "no-store",
     });
     if (!res.ok) return null;
@@ -167,19 +184,19 @@ function round(n: number, digits: number): number {
 }
 
 export async function fetchCurrentPrice(zone: ZoneCode): Promise<CurrentPrice> {
-  // 1. Try FastAPI backend
+  // 1. Primary: NordAPI.ee (always fast, no cold-start)
+  const nordapi = await fetchNordapiCurrentPrice(zone);
+  if (nordapi) return nordapi;
+
+  // 2. Secondary: FastAPI backend (with timeout to avoid Render cold-start hang)
   try {
-    const res = await fetch(`${API_BASE}/current-price/${zone}`, {
+    const res = await fetchWithTimeout(`${API_BASE}/current-price/${zone}`, {
       cache: "no-store",
     });
     if (res.ok) return res.json();
   } catch {
     // ignore, try next
   }
-
-  // 2. Fallback: call nordapi.ee directly
-  const nordapi = await fetchNordapiCurrentPrice(zone);
-  if (nordapi) return nordapi;
 
   // 3. Last resort: Supabase stale forecasts
   const { data, error } = await supabase
@@ -209,19 +226,19 @@ export async function fetchZoneStats(
   zone: ZoneCode,
   hours: number = 24
 ): Promise<ZoneStats> {
-  // 1. Try FastAPI backend
+  // 1. Primary: NordAPI.ee (always fast, no cold-start)
+  const nordapi = await fetchNordapiZoneStats(zone, hours);
+  if (nordapi) return nordapi;
+
+  // 2. Secondary: FastAPI backend (with timeout to avoid Render cold-start hang)
   try {
-    const res = await fetch(`${API_BASE}/stats/${zone}?hours=${hours}`, {
+    const res = await fetchWithTimeout(`${API_BASE}/stats/${zone}?hours=${hours}`, {
       cache: "no-store",
     });
     if (res.ok) return res.json();
   } catch {
     // ignore, try next
   }
-
-  // 2. Fallback: call nordapi.ee directly
-  const nordapi = await fetchNordapiZoneStats(zone, hours);
-  if (nordapi) return nordapi;
 
   // 3. Last resort: Supabase stale forecasts
   const { data, error } = await supabase

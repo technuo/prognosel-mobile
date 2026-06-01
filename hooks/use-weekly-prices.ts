@@ -1,33 +1,23 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import useSWR from "swr";
 import { fetchWeeklyPrices } from "@/lib/api/nordapi";
-import type { ZoneCode, DayPriceData } from "@/types";
+import type { ZoneCode } from "@/types";
 
 export function useWeeklyPrices(zone: ZoneCode) {
-  const [data, setData] = useState<DayPriceData[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        const weekData = await fetchWeeklyPrices(zone);
-        if (!cancelled) setData(weekData);
-      } catch (e) {
-        if (!cancelled) setError("Failed to load weekly prices");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+  const { data, error, isLoading } = useSWR(
+    ["weekly-prices", zone],
+    () => fetchWeeklyPrices(zone),
+    {
+      refreshInterval: 300_000,  // weekly data changes slowly — refresh every 5 min
+      dedupingInterval: 30_000,
+      revalidateOnFocus: false,
     }
+  );
 
-    load();
-    return () => { cancelled = true; };
-  }, [zone]);
-
-  return { data, loading, error };
+  return {
+    data: data || [],
+    loading: isLoading,
+    error: error ? (error instanceof Error ? error.message : "Failed to load weekly prices") : null,
+  };
 }

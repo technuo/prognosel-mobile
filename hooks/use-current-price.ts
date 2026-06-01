@@ -1,34 +1,27 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import useSWR from "swr";
 import { fetchCurrentPrice } from "@/lib/api/forecast";
 import { toRetailPrice } from "@/lib/pricing";
 import type { ZoneCode } from "@/types";
 
 export function useCurrentPrice(zone: ZoneCode) {
-  const [price, setPrice] = useState<number | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    async function load() {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await fetchCurrentPrice(zone);
-        if (!cancelled) setPrice(toRetailPrice(data.price_sek_kwh));
-      } catch (e) {
-        if (!cancelled) setError("Failed to load price");
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+  const { data, error, isLoading } = useSWR(
+    ["current-price", zone],
+    async () => {
+      const priceData = await fetchCurrentPrice(zone);
+      return toRetailPrice(priceData.price_sek_kwh);
+    },
+    {
+      refreshInterval: 60_000,
+      dedupingInterval: 10_000,
+      revalidateOnFocus: false,
     }
+  );
 
-    load();
-    return () => { cancelled = true; };
-  }, [zone]);
-
-  return { price, loading, error };
+  return {
+    price: data ?? null,
+    loading: isLoading,
+    error: error ? (error instanceof Error ? error.message : "Failed to load price") : null,
+  };
 }

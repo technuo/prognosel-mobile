@@ -151,7 +151,9 @@ export default function HomePage() {
   }, [today]);
 
   const forecastLoading = weekLoading;
-  const isLoading = priceLoading || weekLoading || statsLoading;
+  // Per-section loading for progressive rendering
+  const showPriceSkeleton = priceLoading;
+  const showStatsSkeleton = statsLoading;
 
   const minPrice = chartData.length ? Math.min(...chartData.map((d) => d.p)) : 0;
   const maxPrice = chartData.length ? Math.max(...chartData.map((d) => d.p)) : 0;
@@ -164,7 +166,7 @@ export default function HomePage() {
 
       <div className="px-5 pt-2 pb-24">
         {/* Current Price Hero */}
-        {isLoading ? (
+        {showPriceSkeleton ? (
           <LoadingCard />
         ) : (
           <div className="bg-card rounded-[20px] p-5 mb-4 shadow-sm border border-line">
@@ -193,7 +195,7 @@ export default function HomePage() {
         )}
 
         {/* Metrics Row */}
-        {isLoading ? (
+        {showStatsSkeleton ? (
           <div className="flex gap-2.5 mb-5">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="bg-card rounded-xl p-3.5 shadow-sm border border-line flex-1 min-w-0 animate-pulse">
