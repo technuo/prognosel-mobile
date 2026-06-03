@@ -1,9 +1,13 @@
 import { supabase } from "@/lib/supabase/client";
-import { eurMwhToWholesaleSekKwh } from "@/lib/pricing";
+import { eurMwhToWholesaleSekKwh, toRetailPrice } from "@/lib/pricing";
 import type { ZoneCode, ForecastRecord, ZoneStats } from "@/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const NORDAPI_BASE = "https://nordapi.ee/api/v1";
+const NORDAPI_PROXY =
+  typeof window !== "undefined"
+    ? "/api/nordapi"
+    : `${process.env.NEXT_PUBLIC_API_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")}/api/nordapi`;
 const FETCH_TIMEOUT_MS = 5000; // 5-second timeout for all external fetches
 
 export interface CurrentPrice {
@@ -84,7 +88,7 @@ export async function fetchForecastsFromApi(
 // ── NordAPI.ee: real-time current price ────────────────────────────────────
 async function fetchNordapiCurrentPrice(zone: ZoneCode): Promise<CurrentPrice | null> {
   try {
-    const res = await fetchWithTimeout(`${NORDAPI_BASE}/electricity/current/${zone}`, {
+    const res = await fetchWithTimeout(`${NORDAPI_PROXY}?endpoint=current&zone=${zone}`, {
       cache: "no-store",
     });
     if (!res.ok) return null;
@@ -111,7 +115,7 @@ async function fetchNordapiZoneStats(
   hours: number = 24
 ): Promise<ZoneStats | null> {
   try {
-    const res = await fetchWithTimeout(`${NORDAPI_BASE}/electricity/today/${zone}`, {
+    const res = await fetchWithTimeout(`${NORDAPI_PROXY}?endpoint=today&zone=${zone}`, {
       cache: "no-store",
     });
     if (!res.ok) return null;
@@ -136,7 +140,7 @@ async function fetchNordapiZoneStats(
       if (!hourly.has(key)) {
         hourly.set(key, { prices: [], timestamp: ts });
       }
-      hourly.get(key)!.prices.push(parseFloat(String(p.price_local_kwh)));
+      hourly.get(key)!.prices.push(toRetailPrice(parseFloat(String(p.price_local_kwh))));
     }
 
     const sorted = Array.from(hourly.entries()).sort(
@@ -254,17 +258,17 @@ export async function fetchZoneStats(
   }
 
   const prices = data.map((r) =>
-    eurMwhToWholesaleSekKwh(r.predicted_price / 11.5)
+    toRetailPrice(eurMwhToWholesaleSekKwh(r.predicted_price / 11.5))
   );
   const minPrice = Math.min(...prices);
   const maxPrice = Math.max(...prices);
   const avgPrice = prices.reduce((a, b) => a + b, 0) / prices.length;
 
   const minRecord = data.find(
-    (r) => eurMwhToWholesaleSekKwh(r.predicted_price / 11.5) === minPrice
+    (r) => toRetailPrice(eurMwhToWholesaleSekKwh(r.predicted_price / 11.5)) === minPrice
   );
   const maxRecord = data.find(
-    (r) => eurMwhToWholesaleSekKwh(r.predicted_price / 11.5) === maxPrice
+    (r) => toRetailPrice(eurMwhToWholesaleSekKwh(r.predicted_price / 11.5)) === maxPrice
   );
 
   return {

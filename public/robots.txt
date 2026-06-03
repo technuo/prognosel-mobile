@@ -1,0 +1,13 @@
+User-agent: *
+Allow: /
+Allow: /elpriser/
+Allow: /prognos/
+Allow: /guide/
+
+# Do not index auth-protected pages
+Disallow: /login/
+Disallow: /auth/
+Disallow: /dashboard/
+Disallow: /api/
+
+Sitemap: https://prognosel.se/sitemap.xml

@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    width: 1200px;
+    height: 630px;
+    background: linear-gradient(135deg, #FAF8F5 0%, #F5F1EB 50%, #EDE8E1 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Playfair Display', Georgia, serif;
+    position: relative;
+    overflow: hidden;
+  }
+  /* Subtle grid texture */
+  body::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(196,98,58,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(196,98,58,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  /* Warm radial glow */
+  body::after {
+    content: '';
+    position: absolute;
+    top: 10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 900px;
+    height: 500px;
+    background: radial-gradient(ellipse, rgba(196,98,58,0.08) 0%, transparent 70%);
+  }
+  .content {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+  }
+  .logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-bottom: 40px;
+  }
+  .logo-icon {
+    width: 48px;
+    height: 48px;
+    background: #F4E4DC;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .logo-icon svg { width: 24px; height: 24px; }
+  .logo-text {
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: 32px;
+    font-weight: 700;
+    color: #1C1814;
+  }
+  h1 {
+    font-size: 72px;
+    font-weight: 700;
+    color: #1C1814;
+    line-height: 1.1;
+    margin-bottom: 20px;
+  }
+  h1 em {
+    font-style: italic;
+    color: #C4623A;
+  }
+  .subtitle {
+    font-family: 'Instrument Sans', 'Inter', system-ui, sans-serif;
+    font-size: 28px;
+    color: #8C847C;
+    font-weight: 400;
+    margin-bottom: 48px;
+  }
+  .badges {
+    display: flex;
+    gap: 16px;
+    justify-content: center;
+  }
+  .badge {
+    background: rgba(196,98,58,0.1);
+    border: 1px solid rgba(196,98,58,0.2);
+    border-radius: 100px;
+    padding: 10px 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 16px;
+    color: #C4623A;
+    letter-spacing: 1px;
+  }
+  .zones {
+    position: absolute;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 24px;
+    z-index: 1;
+  }
+  .zone {
+    background: rgba(250,248,245,0.8);
+    border: 1px solid rgba(28,24,20,0.08);
+    border-radius: 12px;
+    padding: 12px 20px;
+    text-align: center;
+  }
+  .zone-code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: #8C847C;
+    margin-bottom: 4px;
+  }
+  .zone-price {
+    font-family: 'Playfair Display', serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: #1C1814;
+  }
+</style>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="content">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M9.5 2L4 9H8.5L7 14L13 7H8.5L9.5 2Z" stroke="#C4623A" stroke-width="1.5" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </div>
+      <span class="logo-text">PrognosEL</span>
+    </div>
+    <h1>Elpriser idag —<br><em>förutspå imorgon</em></h1>
+    <p class="subtitle">AI-driven 24h-prognos för SE1–SE4 · Gratis</p>
+    <div class="badges">
+      <span class="badge">Realtidsdata</span>
+      <span class="badge">Nordpool</span>
+      <span class="badge">Sverige</span>
+    </div>
+  </div>
+  <div class="zones">
+    <div class="zone"><div class="zone-code">SE1</div><div class="zone-price">48 öre</div></div>
+    <div class="zone"><div class="zone-code">SE2</div><div class="zone-price">52 öre</div></div>
+    <div class="zone"><div class="zone-code">SE3</div><div class="zone-price">87 öre</div></div>
+    <div class="zone"><div class="zone-code">SE4</div><div class="zone-price">93 öre</div></div>
+  </div>
+</body>
+</html>
