@@ -444,8 +444,6 @@ export const articles: ArticleData[] = [
       },
     ],
   },
-];
-
   {
     slug: "elpriser-idag",
     title: "Elpriser idag – Se aktuella spotpriser per timme i Sverige",
@@ -617,6 +615,7 @@ export const articles: ArticleData[] = [
       },
     ],
   },
+];
 
 export function getArticleBySlug(slug: string): ArticleData | undefined {
   return articles.find((a) => a.slug === slug);
