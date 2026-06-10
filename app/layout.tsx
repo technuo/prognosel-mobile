@@ -48,6 +48,9 @@ export const metadata: Metadata = {
       "en-SE": "https://prognosel.se/en",
     },
   },
+  verification: {
+    google: "01oh6yk7TRrGao-5fdlt6q64ivBm_gcwdZVBZW2rShs",
+  },
   robots: {
     index: true,
     follow: true,
