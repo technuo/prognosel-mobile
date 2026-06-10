@@ -3,7 +3,7 @@ import "./globals.css";
 import { LanguageProvider } from "@/hooks/use-language";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://prognosel.se"),
+  metadataBase: new URL("https://prognosel.energy"),
   title: {
     default: "PrognosEL – Elpriser Idag & AI-Prognos för SE1–SE4 | Gratis",
     template: "%s | PrognosEL",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "sv_SE",
-    url: "https://prognosel.se",
+    url: "https://prognosel.energy",
     siteName: "PrognosEL",
     title: "PrognosEL – Elpriser & AI-Prognos Sverige",
     description: "Aktuella spotpriser + 24h AI-prognos för SE1–SE4. Gratis.",
@@ -42,10 +42,10 @@ export const metadata: Metadata = {
     images: ["/og-image.png"],
   },
   alternates: {
-    canonical: "https://prognosel.se",
+    canonical: "https://prognosel.energy",
     languages: {
-      "sv-SE": "https://prognosel.se",
-      "en-SE": "https://prognosel.se/en",
+      "sv-SE": "https://prognosel.energy",
+      "en-SE": "https://prognosel.energy/en",
     },
   },
   verification: {

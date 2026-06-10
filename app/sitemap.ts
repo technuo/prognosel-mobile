@@ -1,7 +1,7 @@
 import { MetadataRoute } from "next";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://prognosel.se";
+  const baseUrl = "https://prognosel.energy";
 
   const staticRoutes: MetadataRoute.Sitemap = [
     { url: baseUrl, priority: 1.0, changeFrequency: "hourly" },
