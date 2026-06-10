@@ -446,6 +446,178 @@ export const articles: ArticleData[] = [
   },
 ];
 
+  {
+    slug: "elpriser-idag",
+    title: "Elpriser idag – Se aktuella spotpriser per timme i Sverige",
+    description:
+      "Kolla elpriser idag per timme för SE1, SE2, SE3 och SE4. Förstå varför elpriset varierar under dagen och lär dig vilka timmar som är billigast just nu.",
+    keywords: [
+      "elpriser idag",
+      "elpris idag",
+      "spotpris idag",
+      "aktuella elpriser",
+      "el pris idag",
+      "elpris per timme idag",
+      "billiga eltimmar idag",
+    ],
+    category: "Aktuellt",
+    readTime: "5 min",
+    published: "2026-06-10",
+    updated: "2026-06-10",
+    toc: [
+      { id: "vad-kostar-elen-idag", text: "Vad kostar elen idag?", level: 2 },
+      { id: "varfor-varierar-priset", text: "Varför varierar priset timme för timme?", level: 2 },
+      { id: "billigaste-timmarna", text: "Billigaste timmarna idag", level: 2 },
+      { id: "skillnad-mellan-omraden", text: "Prisskillnad mellan SE1–SE4", level: 2 },
+      { id: "sa-foljer-du-priset", text: "Så följer du elpriset idag", level: 2 },
+    ],
+    content: [
+      {
+        type: "paragraph",
+        text: "Elpriset i Sverige sätts varje timme på elbörsen Nord Pool och skiljer sig åt mellan landets fyra elområden – SE1 i norr till SE4 i söder. Om du har ett rörligt elavtal (spotprisavtal) betalar du det faktiska marknadspriset plus påslag och moms. Det betyder att det du betalar klockan 07 på morgonen kan vara dubbelt så dyrt som klockan 03 på natten.",
+      },
+      {
+        type: "highlight",
+        text: "PrognosEL visar elpriser idag i realtid för alla fyra elområden, timme för timme. Du ser direkt vilken timme som är billigast just nu.",
+      },
+      {
+        type: "link",
+        href: "/elpriser",
+        label: "Se elpriser idag per timme →",
+      },
+      { type: "heading", text: "Vad kostar elen idag?", level: 2 },
+      {
+        type: "paragraph",
+        text: "Elpriset idag beror på en rad faktorer som samverkar i realtid. Spotpriset anges i öre per kilowattimme (öre/kWh) och varierar kraftigt under dygnet. Historiskt sett brukar ett genomsnittligt dygn se ut så här:",
+      },
+      {
+        type: "list",
+        items: [
+          "Nattetid (02–06): 30–60 öre/kWh – billigast på dygnet",
+          "Morgonrusning (07–09): 80–150 öre/kWh – priset stiger snabbt",
+          "Mitt på dagen (10–14): 60–100 öre/kWh – lugnt och stabilt",
+          "Kvällsrusning (17–20): 100–200+ öre/kWh – dyrt på dygnet",
+          "Sen kväll (21–01): 50–80 öre/kWh – sjunker successivt",
+        ],
+      },
+      {
+        type: "paragraph",
+        text: "Dessa är riktmärken – den faktiska prisnivån varierar kraftigt beroende på väder, vindkraft, kärnkraftsläge och europeisk elhandel. Under extrema vinterdagar kan kvällstopparna överstiga 400 öre/kWh i SE4, medan soliga sommardagar med stark vind kan ge priser nära noll.",
+      },
+      { type: "heading", text: "Varför varierar priset timme för timme?", level: 2 },
+      {
+        type: "paragraph",
+        text: "Elpriset sätts av utbud och efterfrågan på Nord Pool. Varje morgon klockan 12 auktioneras nästa dygns 24 timpriser ut. Tre faktorer styr priset mest:",
+      },
+      {
+        type: "list",
+        items: [
+          "Efterfrågan: Hög förbrukning på morgon och kväll driver upp priset. Låg förbrukning på natten pressar ner det.",
+          "Vind och sol: Kraftig vind ger stora mängder billig el. Solceller bidrar till lägre priser mitt på dagen, särskilt sommartid.",
+          "Import och export: Sverige är sammankopplat med Norge, Danmark, Finland och Europa. Höga priser utomlands drar upp svenska priser, särskilt i SE3 och SE4.",
+        ],
+      },
+      {
+        type: "paragraph",
+        text: "Det är just den här dynamiken som gör det lönsamt att kolla elpriset idag innan du startar tvättmaskinen, diskmaskinen eller laddar elbilen. Skillnaden mellan dyraste och billigaste timmen är ofta 50–100% – ibland ännu mer.",
+      },
+      { type: "heading", text: "Billigaste timmarna idag", level: 2 },
+      {
+        type: "paragraph",
+        text: "Det finns ett relativt stabilt mönster för när elen är billigast under ett normalt dygn:",
+      },
+      {
+        type: "list",
+        items: [
+          "Klockan 02–06: Absolut billigast. Nästan ingen är vaken, industrin är stängd och vindkraften producerar på topp.",
+          "Klockan 11–13: En lågperiod mitt på dagen. Solceller bidrar och hushållsförbrukningen är lägre.",
+          "Klockan 22–24: Priserna sjunker när folk går och lägger sig.",
+        ],
+      },
+      {
+        type: "highlight",
+        text: "Tips: Ställ diskmaskinen och tvättmaskinen på timer till 02:00. Du sparar 30–50% på den körningen jämfört med att köra den 18:00.",
+      },
+      {
+        type: "paragraph",
+        text: "Exakt vilka timmar som är billigast idag beror på det aktuella väderläget och vad som händer på europeiska elmarknader. PrognosEL:s AI-prognos ger dig en 24-timmarsprognos så att du kan planera dagen kvällen innan.",
+      },
+      {
+        type: "link",
+        href: "/prognos",
+        label: "Se AI-prognos för morgondagens elpriser →",
+      },
+      { type: "heading", text: "Prisskillnad mellan SE1–SE4", level: 2 },
+      {
+        type: "paragraph",
+        text: "Sverige är indelat i fyra elområden och priset kan skilja sig markant beroende på var du bor:",
+      },
+      {
+        type: "list",
+        items: [
+          "SE1 – Luleå och norra Norrland: Lägst pris. Riklig vattenkraft och låg befolkningstäthet. Priset är ofta 30–50% under riksgenomsnittet.",
+          "SE2 – Sundsvall och södra Norrland: Lågt till medelhögt pris. Påverkas av industriförbrukning men har god tillgång på vattenkraft.",
+          "SE3 – Stockholm och södra Mellansverige: Landets befolkningscentrum. Högt elbehov driver priserna uppåt, särskilt under morgon och kväll.",
+          "SE4 – Malmö och södra Sverige: Högst pris. Starkt beroende av elimport från Europa och Danmark. Känsligast för europeiska prissvängningar.",
+        ],
+      },
+      {
+        type: "paragraph",
+        text: "Under ett normalt dygn kan prisskillnaden mellan SE1 och SE4 vara 20–60 öre/kWh. Under extrema perioder – till exempel en kall vintermorgon med lite vind – kan skillnaden vara 2–3 kronor per kWh. Det är därför viktigt att alltid kolla priset för ditt specifika elområde.",
+      },
+      {
+        type: "link",
+        href: "/elpriser",
+        label: "Se aktuellt pris i ditt elområde →",
+      },
+      { type: "heading", text: "Så följer du elpriset idag", level: 2 },
+      {
+        type: "paragraph",
+        text: "Det enklaste sättet att alltid ha koll på elpriset idag är att använda PrognosEL. Du ser direkt:",
+      },
+      {
+        type: "list",
+        items: [
+          "Aktuellt timspris i realtid för SE1, SE2, SE3 och SE4",
+          "Prisgrafer för hela dygnet – se var du befinner dig i priscykeln",
+          "AI-prognos för de kommande 24 timmarna",
+          "Veckoplanering – identifiera de billigaste dagarna och timmarna i förväg",
+        ],
+      },
+      {
+        type: "paragraph",
+        text: "Appen är gratis och kräver inget abonnemang för att se dagens priser. Skapar du ett konto får du dessutom personliga spartips baserade på ditt elområde och dina vanor.",
+      },
+      {
+        type: "link",
+        href: "/login",
+        label: "Skapa gratis konto →",
+      },
+    ],
+    faq: [
+      {
+        q: "Var hittar jag elpriser idag per timme?",
+        a: "På PrognosEL ser du elpriser idag för alla timmar och alla elområden (SE1–SE4) i realtid. Priserna uppdateras direkt från Nord Pool.",
+      },
+      {
+        q: "Vilken timme är elen billigast idag?",
+        a: "Generellt är elen billigast mellan 02:00 och 06:00 på natten. Exakt vilken timme som är billigast idag beror på väder och europeisk elhandel – kolla AI-prognosen på PrognosEL för att se dagens specifika prisbild.",
+      },
+      {
+        q: "Varför är elpriset olika i SE1, SE2, SE3 och SE4?",
+        a: "Sverige är uppdelat i fyra elområden för att hantera begränsad överföringskapacitet i elnätet. Norra Sverige (SE1) har mycket vattenkraft och låg förbrukning, vilket ger lägre priser. Södra Sverige (SE4) är mer beroende av elimport och påverkas mer av europeiska priser.",
+      },
+      {
+        q: "Hur ofta uppdateras elpriset?",
+        a: "Timspriset för nästa dygn auktioneras ut varje dag klockan 12:00 på Nord Pool. Det innebär att du redan på eftermiddagen idag kan se vad elen kommer kosta imorgon, timme för timme.",
+      },
+      {
+        q: "Gäller elpriserna på PrognosEL för mitt elavtal?",
+        a: "PrognosEL visar spotpriset från Nord Pool (exkl. moms och påslag). Om du har ett spotprisavtal betalar du detta pris plus din elhandlares påslag och elnätsavgift. Har du fastpris är ditt pris detsamma oavsett vad spotpriset visar.",
+      },
+    ],
+  },
+
 export function getArticleBySlug(slug: string): ArticleData | undefined {
   return articles.find((a) => a.slug === slug);
 }

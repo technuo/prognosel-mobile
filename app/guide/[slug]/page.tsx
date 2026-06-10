@@ -24,11 +24,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: article.description,
     keywords: article.keywords,
     alternates: {
-      canonical: `https://prognosel.se/guide/${article.slug}/`,
+      canonical: `https://prognosel.energy/guide/${article.slug}/`,
     },
     openGraph: {
       type: "article",
-      url: `https://prognosel.se/guide/${article.slug}/`,
+      url: `https://prognosel.energy/guide/${article.slug}/`,
       title: article.title,
       description: article.description,
       locale: "sv_SE",
@@ -54,21 +54,21 @@ function ArticleSchema({ article }: { article: ArticleData }) {
     author: {
       "@type": "Organization",
       name: "PrognosEL",
-      url: "https://prognosel.se",
+      url: "https://prognosel.energy",
     },
     publisher: {
       "@type": "Organization",
       name: "PrognosEL",
       logo: {
         "@type": "ImageObject",
-        url: "https://prognosel.se/og-image.png",
+        url: "https://prognosel.energy/og-image.png",
       },
     },
     datePublished: article.published,
     dateModified: article.updated,
     mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `https://prognosel.se/guide/${article.slug}/`,
+      "@id": `https://prognosel.energy/guide/${article.slug}/`,
     },
     keywords: article.keywords.join(", "),
     articleSection: article.category,

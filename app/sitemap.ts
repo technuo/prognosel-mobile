@@ -15,6 +15,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/guide/spotpris/`, priority: 0.7, changeFrequency: "monthly" },
     { url: `${baseUrl}/guide/elpriser-2025/`, priority: 0.7, changeFrequency: "monthly" },
     { url: `${baseUrl}/guide/billigaste-timmen/`, priority: 0.7, changeFrequency: "monthly" },
+    { url: `${baseUrl}/guide/elpriser-idag/`, priority: 0.85, changeFrequency: "daily" },
   ];
 
   return staticRoutes;
