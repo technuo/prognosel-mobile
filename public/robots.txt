@@ -10,4 +10,4 @@ Disallow: /auth/
 Disallow: /dashboard/
 Disallow: /api/
 
-Sitemap: https://prognosel.se/sitemap.xml
+Sitemap: https://prognosel.energy/sitemap.xml
