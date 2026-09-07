@@ -203,17 +203,17 @@ export async function fetchWeeklyPrices(zone: ZoneCode): Promise<DayPriceData[]>
     const prices = hours.map((h) => h.price).filter((p) => p > 0);
     const hasData = prices.length > 0;
 
-    // Use Swedish timezone for day name and month (English labels)
-    const dayName = d.toLocaleDateString("en-US", {
+    // Use Swedish timezone and Swedish labels for day name and month
+    const dayName = d.toLocaleDateString("sv-SE", {
       timeZone: "Europe/Stockholm",
       weekday: "short",
     });
-    const monthName = d.toLocaleDateString("en-US", {
+    const monthName = d.toLocaleDateString("sv-SE", {
       timeZone: "Europe/Stockholm",
       month: "short",
     });
     const dayNum = parseInt(
-      d.toLocaleDateString("en-US", {
+      d.toLocaleDateString("sv-SE", {
         timeZone: "Europe/Stockholm",
         day: "numeric",
       }),

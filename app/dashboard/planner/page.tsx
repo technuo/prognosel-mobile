@@ -97,7 +97,7 @@ export default function PlannerPage() {
         <NavHeader title={t.weeklyPlanner} zone={zone} />
         <div className="px-5 pt-2 pb-24">
           <div className="h-[200px] flex items-center justify-center text-faint text-sm">
-            No price data available
+            Inga prisdata tillgängliga
           </div>
         </div>
       </div>
@@ -212,9 +212,9 @@ export default function PlannerPage() {
               {day?.dayName} · {day?.dayLabel}
             </h3>
             <div className="h-[200px] flex flex-col items-center justify-center text-faint text-sm">
-              <p>Price data not yet available</p>
+              <p>Prisdata ännu inte tillgängliga</p>
               <p className="text-xs mt-1 opacity-60">
-                Day-ahead prices are published by Nord Pool at 12:00 CET
+                Dygnspriser publiceras av Nord Pool kl. 12:00 CET
               </p>
             </div>
           </div>
@@ -241,7 +241,7 @@ export default function PlannerPage() {
                         {String(w.hour).padStart(2, "0")}:00 –{" "}
                         {String(w.hour + 1).padStart(2, "0")}:00
                       </div>
-                      <div className="text-xs text-muted">Lowest price window</div>
+                      <div className="text-xs text-muted">Billigaste timmen</div>
                     </div>
                   </div>
                   <div className="text-right">
@@ -255,10 +255,10 @@ export default function PlannerPage() {
             </div>
             <div className="mt-4 p-3 bg-accent-soft/50 rounded-xl">
               <p className="text-sm text-accent-hi font-medium">
-                Save ~{((dayMax - dayMin) * 2 / 100).toFixed(0)} SEK vs peak pricing
+                Spara ~{((dayMax - dayMin) * 1.5 / 100).toFixed(0)} kr jämfört med topptimmen
               </p>
               <p className="text-xs text-muted mt-0.5">
-                By running appliances during the cheapest 3-hour window
+                Genom att köra energitunga apparater i de billigaste timmarna (uppskattning)
               </p>
             </div>
           </div>
