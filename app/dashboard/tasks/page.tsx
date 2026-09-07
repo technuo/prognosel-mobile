@@ -5,6 +5,7 @@ import NavHeader from "@/components/layout/nav-header";
 import { useLanguage } from "@/hooks/use-language";
 import { useZone } from "@/hooks/use-zone";
 import { useTasks } from "@/hooks/use-tasks";
+import { track } from "@/lib/analytics";
 import { Flame, Zap, Plus, Trash2 } from "lucide-react";
 
 export default function TasksPage() {
@@ -30,8 +31,17 @@ export default function TasksPage() {
     if (!title) return;
     const savings = parseFloat(newSavings) || 0;
     addTask(title, savings);
+    void track("task_added", { zone, task: title });
     setNewTitle("");
     setNewSavings("");
+  };
+
+  const handleToggle = (task: (typeof tasks)[number]) => {
+    const completing = !task.done;
+    toggleTask(task.id);
+    if (completing) {
+      void track("task_completed", { zone, task: task.title, savings: task.savings });
+    }
   };
 
   if (!loaded) {
@@ -146,7 +156,7 @@ export default function TasksPage() {
               >
                 <div className="flex items-start gap-3">
                   <button
-                    onClick={() => toggleTask(task.id)}
+                    onClick={() => handleToggle(task)}
                     className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors cursor-pointer ${
                       task.done
                         ? "bg-good/20"
@@ -172,7 +182,7 @@ export default function TasksPage() {
                   </button>
                   <div
                     className="flex-1 min-w-0 cursor-pointer"
-                    onClick={() => toggleTask(task.id)}
+                    onClick={() => handleToggle(task)}
                   >
                     <p
                       className={`text-sm font-medium ${

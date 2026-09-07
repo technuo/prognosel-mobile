@@ -6,6 +6,7 @@ import MobileWrapper from "@/components/layout/mobile-wrapper";
 import { useLanguage } from "@/hooks/use-language";
 import { useZone } from "@/hooks/use-zone";
 import { zoneList } from "@/lib/i18n/translations";
+import { track } from "@/lib/analytics";
 import type { ZoneCode } from "@/types";
 
 export default function ZoneSelectionPage() {
@@ -19,6 +20,7 @@ export default function ZoneSelectionPage() {
     setLoading(true);
     // Save to localStorage (also attempts Supabase if logged in)
     setZone(selected);
+    void track("zone_selected", { zone: selected });
     router.push("/dashboard/");
     setLoading(false);
   };
