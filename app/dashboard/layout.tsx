@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import MobileWrapper from "@/components/layout/mobile-wrapper";
 import BottomNav from "@/components/layout/bottom-nav";
+import { ZONE_SELECTED_KEY } from "@/hooks/use-zone";
 
 export default function DashboardLayout({
   children,
@@ -13,6 +14,7 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const [checking, setChecking] = useState(true);
+  const [authOk, setAuthOk] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -25,6 +27,7 @@ export default function DashboardLayout({
       if (!isMounted) return;
       if (user) {
         setChecking(false);
+        setAuthOk(true);
         return;
       }
 
@@ -38,6 +41,7 @@ export default function DashboardLayout({
           router.replace("/login/");
         } else {
           setChecking(false);
+          setAuthOk(true);
         }
       }, 2000);
     }
@@ -51,6 +55,7 @@ export default function DashboardLayout({
       if (event === "SIGNED_IN") {
         clearTimeout(redirectTimer);
         setChecking(false);
+        setAuthOk(true);
       }
     });
 
@@ -60,6 +65,18 @@ export default function DashboardLayout({
       subscription.unsubscribe();
     };
   }, [router]);
+
+  // Activation funnel: a signed-in user who has never picked a zone on this
+  // device is sent to /zone first (correct prices + zone_selected event).
+  useEffect(() => {
+    if (!authOk) return;
+    const choseZone =
+      typeof window !== "undefined" &&
+      localStorage.getItem(ZONE_SELECTED_KEY) === "1";
+    if (!choseZone) {
+      router.replace("/zone/");
+    }
+  }, [authOk, router]);
 
   if (checking) {
     return (

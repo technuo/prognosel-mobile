@@ -6,6 +6,9 @@ import type { ZoneCode } from "@/types";
 
 const STORAGE_KEY = "prognosel-zone";
 
+/** Set to "1" only when the user actively picked a zone (activation funnel). */
+export const ZONE_SELECTED_KEY = "prognosel-zone-selected";
+
 export function useZone() {
   const [zone, setZoneState] = useState<ZoneCode>("SE3");
   const [loaded, setLoaded] = useState(false);
@@ -45,6 +48,7 @@ export function useZone() {
     setZoneState(newZone);
     if (typeof window !== "undefined") {
       localStorage.setItem(STORAGE_KEY, newZone);
+      localStorage.setItem(ZONE_SELECTED_KEY, "1");
     }
 
     // 3. Sync to Supabase profile if user is authenticated
