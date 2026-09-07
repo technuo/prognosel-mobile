@@ -40,7 +40,7 @@ export default function TasksPage() {
         <NavHeader title={t.todo} zone={zone} />
         <div className="px-5 pt-2 pb-24">
           <div className="h-[200px] flex items-center justify-center text-faint text-sm">
-            Loading tasks...
+            Loading tasks…
           </div>
         </div>
       </div>
@@ -63,16 +63,16 @@ export default function TasksPage() {
             <div className="flex items-center gap-2 mb-1">
               <Flame size={16} className="text-white/80" />
               <span className="text-[11px] font-mono uppercase tracking-wider text-white/80">
-                Day Streak
+                {t.streak}
               </span>
             </div>
             <div className="font-serif text-4xl font-bold leading-none">
               {streak}
             </div>
-            <div className="text-sm text-white/80 mt-1">days</div>
+            <div className="text-sm text-white/80 mt-1">dagar</div>
             <div className="mt-3 text-xs text-white/70">
-              {completedCount} of {tasks.length} tasks done · Saved{" "}
-              {totalSavings.toFixed(0)} SEK
+              {completedCount} av {tasks.length} uppgifter klara · Sparat{" "}
+              {totalSavings.toFixed(0)} kr
             </div>
           </div>
           <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-20">
@@ -84,9 +84,8 @@ export default function TasksPage() {
         <div className="bg-card rounded-[20px] p-5 mb-5 shadow-sm border border-line">
           <div className="flex justify-between items-center mb-3">
             <span className="font-serif text-lg font-semibold text-ink">
-              Today&apos;s Progress
-            </span>
-            <span className="text-sm font-mono text-muted">
+              Dagens framsteg
+            </span>            <span className="text-sm font-mono text-muted">
               {Math.round(progress)}%
             </span>
           </div>
@@ -106,7 +105,7 @@ export default function TasksPage() {
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && handleAdd()}
-              placeholder="Add a new task..."
+              placeholder="Lägg till en ny uppgift…"
               className="flex-1 bg-transparent text-sm text-ink outline-none placeholder:text-faint"
             />
             <input
@@ -125,7 +124,7 @@ export default function TasksPage() {
             </button>
           </div>
           <p className="text-[10px] text-faint">
-            Tip: enter estimated savings in SEK (optional)
+            Tips: ange beräknad besparing i kr (valfritt)
           </p>
         </div>
 
@@ -136,7 +135,7 @@ export default function TasksPage() {
 
         {tasks.length === 0 ? (
           <div className="h-[120px] flex items-center justify-center text-faint text-sm">
-            No tasks yet. Add one above!
+            Inga uppgifter än. Lägg till en ovan!
           </div>
         ) : (
           <div className="flex flex-col gap-2.5">
@@ -184,8 +183,8 @@ export default function TasksPage() {
                     </p>
                     <p className="text-xs text-faint mt-0.5">
                       {task.done
-                        ? `Saved ${task.savings.toFixed(0)} SEK`
-                        : `Save ~${task.savings.toFixed(0)} SEK`}
+                        ? `Sparade ~${task.savings.toFixed(0)} kr`
+                        : `Spara ~${task.savings.toFixed(0)} kr`}
                     </p>
                   </div>
                   <button
@@ -194,7 +193,7 @@ export default function TasksPage() {
                       deleteTask(task.id);
                     }}
                     className="p-1.5 rounded-lg text-faint hover:text-bad hover:bg-bad/10 transition-colors opacity-0 group-hover:opacity-100 cursor-pointer flex-shrink-0"
-                    aria-label="Delete task"
+                    aria-label="Ta bort uppgift"
                   >
                     <Trash2 size={14} />
                   </button>

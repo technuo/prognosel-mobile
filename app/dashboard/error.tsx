@@ -20,17 +20,18 @@ export default function DashboardError({
         <AlertTriangle size={28} className="text-bad" />
       </div>
       <h1 className="font-serif text-xl font-semibold text-ink mb-2 text-center">
-        Something went wrong
+        Något gick fel
       </h1>
       <p className="text-sm text-muted text-center mb-6 max-w-[260px]">
-        {error.message || "An unexpected error occurred. Please try again."}
+        Ett oväntat fel inträffade. Försök igen — om problemet kvarstår, kontrollera
+        din anslutning.
       </p>
       <button
         onClick={reset}
         className="flex items-center gap-2 px-5 py-3 rounded-xl bg-accent text-white text-sm font-semibold cursor-pointer border-none hover:bg-accent-hi transition-colors"
       >
         <RotateCcw size={16} />
-        Try again
+        Försök igen
       </button>
     </div>
   );

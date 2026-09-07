@@ -19,6 +19,13 @@ interface Tip {
   estimatedSavings: number;
 }
 
+const hh = (h: number) => String(h).padStart(2, "0");
+
+/**
+ * Suggest two concrete actions with honest, approximate savings wording.
+ * Savings are "vs the most expensive hour" estimates (retail öre/kWh based)
+ * and deliberately phrased with "~" / "upp till" — they are not guarantees.
+ */
 function generateTips(hours: HourlyPrice[], zone: ZoneCode): Tip[] {
   const valid = hours.filter((h) => h.price > 0);
   if (!valid.length) return [];
@@ -38,40 +45,29 @@ function generateTips(hours: HourlyPrice[], zone: ZoneCode): Tip[] {
 
   const tips: Tip[] = [];
 
-  // Tip 1: cheapest single hour
+  // Tip 1: dishwasher after the cheapest hour (~1.5 kWh per load)
   if (cheapest) {
-    const saving = Math.max(0, mostExpensive.price - cheapest.price) * 2 / 100; // ~2 kWh dishwasher → SEK
+    const saving = Math.max(0, mostExpensive.price - cheapest.price) * 1.5 / 100; // ~1.5 kWh dishwasher → SEK
     tips.push({
       icon: "💡",
-      text: `Run dishwasher after ${String(cheapest.hour).padStart(2, "0")}:00 — save ~${saving.toFixed(0)} SEK`,
+      text: `Starta diskmaskinen efter ${hh(cheapest.hour)}:00 — spara ~${saving.toFixed(0)} kr jämfört med dyraste timmen`,
       zone,
-      taskTitle: `Run dishwasher after ${String(cheapest.hour).padStart(2, "0")}:00`,
+      taskTitle: `Starta diskmaskinen efter ${hh(cheapest.hour)}:00`,
       estimatedSavings: saving,
     });
   }
 
-  // Tip 2: cheapest 3-hour window for EV
+  // Tip 2: EV charging in the cheapest hours (~30 kWh per charge)
   if (cheapest3.length >= 3) {
     const start = cheapest3[0].hour;
     const end = cheapest3[cheapest3.length - 1].hour;
     const saving = Math.max(0, mostExpensive.price - cheapest3[0].price) * 30 / 100; // ~30 kWh EV charge → SEK
     tips.push({
       icon: "🔋",
-      text: `Best EV charging window: ${String(start).padStart(2, "0")}:00–${String(end + 1).padStart(2, "0")}:00`,
+      text: `Ladda elbilen ${hh(start)}:00–${hh(end + 1)}:00 — upp till ~${saving.toFixed(0)} kr billigare än topptimmen`,
       zone,
-      taskTitle: `Charge EV ${String(start).padStart(2, "0")}:00–${String(end + 1).padStart(2, "0")}`,
+      taskTitle: `Ladda elbilen ${hh(start)}:00–${hh(end + 1)}:00`,
       estimatedSavings: saving,
-    });
-  }
-
-  // Tip 3: pre-cool before peak
-  if (mostExpensive) {
-    tips.push({
-      icon: "❄️",
-      text: `Pre-cool home before ${String(mostExpensive.hour).padStart(2, "0")}:00 peak`,
-      zone,
-      taskTitle: `Pre-cool home before ${String(mostExpensive.hour).padStart(2, "0")}:00`,
-      estimatedSavings: 15,
     });
   }
 
@@ -185,10 +181,10 @@ export default function HomePage() {
             </div>
             <div className="flex items-center gap-1.5">
               <span className="text-[13px] text-good font-semibold bg-good/10 px-2.5 py-0.5 rounded-full">
-                Live
+                Nu
               </span>
               <span className="text-xs text-faint">
-                {stats ? `Peak at ${stats.max_time}` : "Loading..."}
+                {stats ? `Högst kl ${stats.max_time}` : "Laddar…"}
               </span>
             </div>
           </div>
@@ -210,7 +206,7 @@ export default function HomePage() {
               label={t.min}
               value={stats ? stats.min_price.toFixed(0) : "--"}
               unit=" öre"
-              sub={stats ? `at ${stats.min_time}` : undefined}
+              sub={stats ? `kl ${stats.min_time}` : undefined}
             />
             <MetricCard
               label={t.avg}
@@ -221,7 +217,7 @@ export default function HomePage() {
               label={t.max}
               value={stats ? stats.max_price.toFixed(0) : "--"}
               unit=" öre"
-              sub={stats ? `at ${stats.max_time}` : undefined}
+              sub={stats ? `kl ${stats.max_time}` : undefined}
             />
             <MetricCard
               label={t.savings}
@@ -236,13 +232,13 @@ export default function HomePage() {
           <div className="flex justify-between items-center mb-4">
             <h3 className="font-serif text-lg font-semibold text-ink">{t.forecast}</h3>
             <span className="text-[11px] font-mono text-faint bg-paper-2 px-2.5 py-0.5 rounded-full">
-              {zone} · today
+              {zone} · idag
             </span>
           </div>
 
           {chartData.length === 0 ? (
             <div className="h-[120px] flex items-center justify-center text-faint text-sm">
-              {forecastLoading ? "Loading prices..." : "No price data available"}
+              {forecastLoading ? "Laddar priser…" : "Inga prisdata tillgängliga"}
             </div>
           ) : (
             <div className="flex items-end gap-[3px] h-[120px] pb-6 relative">
@@ -278,7 +274,7 @@ export default function HomePage() {
         <div className="flex flex-col gap-2.5">
           {tips.length === 0 && !forecastLoading ? (
             <div className="h-[80px] flex items-center justify-center text-faint text-sm">
-              No tips available — check forecast data
+              Inga tips just nu – kontrollera prognosdata
             </div>
           ) : (
             tips.map((tip, i) => (
@@ -294,7 +290,7 @@ export default function HomePage() {
                   <p className="text-sm text-ink-2 leading-relaxed font-medium">{tip.text}</p>
                   <div className="flex items-center gap-1.5 mt-1.5">
                     <ZoneBadge code={tip.zone} />
-                    <span className="text-[11px] text-faint">Tap to add to tasks</span>
+                    <span className="text-[11px] text-faint">Tryck för att lägga till i uppgifter</span>
                   </div>
                 </div>
               </div>

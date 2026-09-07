@@ -41,7 +41,7 @@ export default function SettingsPage() {
       if (authUser) {
         setUser({
           email: authUser.email || "",
-          name: authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "User",
+          name: authUser.user_metadata?.full_name || authUser.email?.split("@")[0] || "Användare",
           avatar: authUser.user_metadata?.avatar_url,
         });
 
@@ -95,11 +95,11 @@ export default function SettingsPage() {
         <div className="bg-card rounded-[20px] p-5 mb-5 shadow-sm border border-line">
           <div className="flex items-center gap-4">
             <div className="w-14 h-14 rounded-full bg-accent/20 flex items-center justify-center text-xl font-serif font-bold text-accent">
-              {user?.name?.[0]?.toUpperCase() || "U"}
+              {user?.name?.[0]?.toUpperCase() || "A"}
             </div>
             <div className="flex-1 min-w-0">
               <h2 className="font-serif text-lg font-semibold text-ink">
-                {user?.name || "User"}
+                {user?.name || "Användare"}
               </h2>
               <div className="flex items-center gap-2 mt-0.5">
                 <ZoneBadge code={zone} />
@@ -121,7 +121,7 @@ export default function SettingsPage() {
               <Mail size={18} className="text-muted" />
               <div className="flex-1">
                 <p className="text-sm text-ink">{user?.email || "..."}</p>
-                <p className="text-xs text-faint">Google Account</p>
+                <p className="text-xs text-faint">Google-konto</p>
               </div>
             </div>
             <button
@@ -150,20 +150,20 @@ export default function SettingsPage() {
               {
                 key: "priceAlerts" as const,
                 icon: Bell,
-                title: "Price Alerts",
-                desc: "Notify when price drops below threshold",
+                title: "Prislarm",
+                desc: "Meddela när priset sjunker under en nivå",
               },
               {
                 key: "weeklySummary" as const,
                 icon: Shield,
-                title: "Weekly Summary",
-                desc: "Every Sunday at 18:00",
+                title: "Veckosammanfattning",
+                desc: "Varje söndag kl. 18:00",
               },
               {
                 key: "taskReminders" as const,
                 icon: Bell,
-                title: "Task Reminders",
-                desc: "Remind before optimal windows",
+                title: "Påminnelser",
+                desc: "Påminn före optimala fönster",
               },
             ].map((item, i, arr) => (
               <div
