@@ -42,10 +42,18 @@ export async function middleware(request: NextRequest) {
     return response;
   }
 
-  // Protected routes - TEMPORARILY BYPASSED FOR TESTING
-  // if (!user && (pathname.startsWith("/dashboard/") || pathname === "/zone/")) {
-  //   return NextResponse.redirect(new URL("/login/", request.url));
-  // }
+  // Protected routes: the dashboard app (and zone selection that precedes it)
+  // requires a session. Marketing/SEO pages (/, /elpriser, /prognos, /guide, …)
+  // and the public price APIs stay accessible.
+  const isProtected =
+    pathname === "/dashboard" ||
+    pathname.startsWith("/dashboard/") ||
+    pathname === "/zone" ||
+    pathname.startsWith("/zone/");
+
+  if (!user && isProtected) {
+    return NextResponse.redirect(new URL("/login/", request.url));
+  }
 
   // Redirect authenticated users away from login
   if (user && pathname === "/login/") {

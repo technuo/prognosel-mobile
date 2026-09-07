@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { fetchForecasts } from "@/lib/api/forecast";
 import { eurMwhToRetailSekKwh } from "@/lib/pricing";
+import { hourInZone } from "@/lib/time";
 import type { ZoneCode } from "@/types";
 
 export const metadata: Metadata = {
@@ -23,7 +24,7 @@ export default async function PrognosPage() {
       try {
         const forecasts = await fetchForecasts(zone, 24, 24);
         const hourly = forecasts.map((f) => ({
-          hour: new Date(f.timestamp).getHours(),
+          hour: hourInZone(f.timestamp),
           price: Math.round(eurMwhToRetailSekKwh(f.predicted_price)),
         }));
         const prices = hourly.map((h) => h.price);
