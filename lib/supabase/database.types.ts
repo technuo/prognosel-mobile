@@ -190,6 +190,29 @@ export interface Database {
           created_at?: string;
         };
       };
+      events: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          event: string;
+          meta: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id?: string | null;
+          event: string;
+          meta?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string | null;
+          event?: string;
+          meta?: Json | null;
+          created_at?: string;
+        };
+      };
     };
     Views: {
       daily_forecast_summary: {

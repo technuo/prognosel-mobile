@@ -6,6 +6,7 @@ import { useLanguage } from "@/hooks/use-language";
 import { useZone } from "@/hooks/use-zone";
 import { useCurrentPrice } from "@/hooks/use-current-price";
 import { useChatHistory } from "@/hooks/use-chat-history";
+import { track } from "@/lib/analytics";
 import { Send } from "lucide-react";
 
 interface Message {
@@ -58,6 +59,7 @@ export default function SparkyPage() {
     await appendMessage(userMsg);
     setInput("");
     setLoading(true);
+    void track("sparky_ask", { zone });
 
     try {
       const res = await fetch("/api/chat/", {

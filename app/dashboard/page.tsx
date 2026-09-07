@@ -9,6 +9,7 @@ import { useCurrentPrice } from "@/hooks/use-current-price";
 import { useWeeklyPrices } from "@/hooks/use-weekly-prices";
 import { useStats } from "@/hooks/use-stats";
 import { useTasks } from "@/hooks/use-tasks";
+import { track } from "@/lib/analytics";
 import type { ZoneCode, HourlyPrice } from "@/types";
 
 interface Tip {
@@ -156,6 +157,10 @@ export default function HomePage() {
 
   const tips = useMemo(() => generateTips(today?.hours || [], zone), [today, zone]);
 
+  useEffect(() => {
+    void track("dashboard_view", { zone });
+  }, [zone]);
+
   return (
     <div className="animate-fade-in">
       <NavHeader title={t.home} zone={zone} />
@@ -280,7 +285,10 @@ export default function HomePage() {
             tips.map((tip, i) => (
               <div
                 key={i}
-                onClick={() => addTask(tip.taskTitle, tip.estimatedSavings)}
+                onClick={() => {
+                  addTask(tip.taskTitle, tip.estimatedSavings);
+                  void track("tip_added_to_tasks", { zone, task: tip.taskTitle });
+                }}
                 className="bg-card rounded-2xl p-4 shadow-sm border border-line flex items-start gap-3 cursor-pointer hover:border-line-hi transition-colors active:scale-[0.98]"
               >
                 <div className="w-9 h-9 rounded-xl bg-paper-2 flex items-center justify-center text-lg flex-shrink-0">
