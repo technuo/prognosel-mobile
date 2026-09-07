@@ -113,7 +113,7 @@ export default function SparkyPage() {
                     : "bg-card border border-line text-ink-2 rounded-bl-md"
                 }`}
               >
-                <p className="text-sm leading-relaxed">{msg.content}</p>
+                <p className="text-sm leading-relaxed whitespace-pre-line">{msg.content}</p>
               </div>
             </div>
           ))}

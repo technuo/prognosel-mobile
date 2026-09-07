@@ -9,7 +9,7 @@ const DEFAULT_ZONE = "SE3";
 
 const MAX_MESSAGE_LENGTH = 1000;
 const GEMINI_TIMEOUT_MS = 15_000;
-const GEMINI_MAX_OUTPUT_TOKENS = 512;
+const GEMINI_MAX_OUTPUT_TOKENS = 1024;
 
 // Per-instance guards. Sufficient for a free launch tier; revisit when usage grows.
 const RATE_WINDOW_MS = 60_000;
@@ -171,6 +171,27 @@ export async function POST(request: NextRequest) {
     priceContext = "\n(No full-day price data available right now.)\n";
   }
 
+  // Deterministic fallback summary (used if the model forgets concrete hours).
+  const cheapHours = todayPrices
+    ? [...todayPrices]
+        .sort((a, b) => a.price - b.price)
+        .slice(0, 3)
+        .sort((a, b) => a.hour.localeCompare(b.hour))
+    : [];
+  const cheapestFloor = cheapHours.length
+    ? Math.min(...cheapHours.map((h) => h.price))
+    : 0;
+  const concreteFallback =
+    cheapHours.length > 0
+      ? lang === "sv"
+        ? `\n\n⚡ Idag i ${zone}: billigaste timmarna är ${cheapHours.map((h) => h.hour).join(", ")} (lägst ${cheapestFloor} öre/kWh).`
+        : `\n\n⚡ Today in ${zone}: the cheapest hours are ${cheapHours.map((h) => h.hour).join(", ")} (lowest ${cheapestFloor} öre/kWh).`
+      : "";
+  const wantsTime =
+    /\b(when|what time|best|cheapest|charge|charging|elbil|batteri|tider|ladda|tvätt|diskmaskin|washer|dishwasher|appliance|köra|starta|när|billigast|bästa|timmar|fönster|window|klockan)\b/i.test(
+      rawMessage
+    );
+
   const systemInstruction =
     `You are "Sparky", a friendly and practical Swedish electricity price assistant. ` +
     `Your tone is warm, concise, and helpful — like a knowledgeable neighbour.\n\n` +
@@ -181,13 +202,17 @@ export async function POST(request: NextRequest) {
     priceContext +
     `\nGuidelines:\n` +
     `1. All times in the context are already local Swedish time (Europe/Stockholm). Never shift them.\n` +
-    `2. Base ALL answers on the price data above. Never make up prices.\n` +
-    `3. When asked about best times to run appliances, give SPECIFIC hours (e.g. "02:00–05:00") ` +
-    `and calculate exact savings compared to peak hours.\n` +
+    `2. Base ALL answers on the price data above. Never make up prices or hours.\n` +
+    `3. When the user asks about timing, charging, washing or any appliance — you MUST end your answer ` +
+    `with the concrete cheapest window using the actual hours from the context (e.g. "02:00–05:00"), ` +
+    `plus the approximate saving. Never answer such a question without giving concrete hours.\n` +
     `4. For washing machine (~1 kWh/load): savings = price difference × 1. For dishwasher (~1.5 kWh): × 1.5. ` +
     `For EV charging (~60 kWh): × 60. Show the math.\n` +
     `5. Keep responses brief (2–4 sentences) and actionable.\n` +
-    `6. If data is missing, say so honestly.`;
+    `6. If the price data is missing, say that prices for later today are not published yet ` +
+    `(Nord Pool publishes around 12:00 CET) and suggest checking back — never invent hours.\n` +
+    `7. Match the user's language strictly. If they write in English, reply in English. ` +
+    `If they write in Swedish, reply in Swedish.`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
@@ -219,9 +244,20 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await res.json();
-    const response =
+    let response =
       data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
       "I'm not sure about that. Could you try rephrasing your question?";
+
+    // Safety net: if the user asked about timing and the model forgot the
+    // concrete hours, append the deterministic cheapest hours ourselves.
+    if (
+      wantsTime &&
+      cheapHours.length > 0 &&
+      !/\d{2}:\d{2}/.test(response) &&
+      concreteFallback
+    ) {
+      response = response + concreteFallback;
+    }
 
     return NextResponse.json({ response });
   } catch (error) {
