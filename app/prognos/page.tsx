@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { fetchForecasts } from "@/lib/api/forecast";
 import { eurMwhToRetailSekKwh } from "@/lib/pricing";
+import { hourInZone } from "@/lib/time";
 import type { ZoneCode } from "@/types";
 
 export const metadata: Metadata = {
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
   description:
     "AI-driven elprisprognos för nästa 24 timmar i SE1–SE4. Se när elen är billigast och planera din förbrukning. Genomsnittligt fel under 8%.",
   alternates: {
-    canonical: "https://prognosel.se/prognos/",
+    canonical: "https://prognosel.energy/prognos/",
   },
 };
 
@@ -23,7 +24,7 @@ export default async function PrognosPage() {
       try {
         const forecasts = await fetchForecasts(zone, 24, 24);
         const hourly = forecasts.map((f) => ({
-          hour: new Date(f.timestamp).getHours(),
+          hour: hourInZone(f.timestamp),
           price: Math.round(eurMwhToRetailSekKwh(f.predicted_price)),
         }));
         const prices = hourly.map((h) => h.price);

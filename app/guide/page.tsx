@@ -1,59 +1,24 @@
 import { Metadata } from "next";
 import Link from "next/link";
+import { articles as articleData } from "./[slug]/articles";
 
 export const metadata: Metadata = {
   title: "Guide – Allt om Elpriser, Spotpris & Sparande",
   description:
     "Lär dig allt om svenska elpriser, spotpris, elområden och hur du sparar pengar på el. Faktabaserade guider med realtidsdata från Nordpool.",
   alternates: {
-    canonical: "https://prognosel.se/guide/",
+    canonical: "https://prognosel.energy/guide/",
   },
 };
 
-const articles = [
-  {
-    slug: "spotpris",
-    title: "Spotpris el – Vad är det och hur fungerar det?",
-    excerpt:
-      "En komplett guide till spotpris: hur det sätts på Nordpool, varför det varierar timme för timme, och hur du som konsument kan dra nytta av det.",
-    badge: "Grundläggande",
-  },
-  {
-    slug: "se1-vs-se4",
-    title: "SE4 vs SE1: Varför skiljer sig elpriset?",
-    excerpt:
-      "En djupdykning i Sveriges fyra elområden. Förstå varför priset i södra Sverige kan vara 2–3 gånger högre än i norr.",
-    badge: "Elområden",
-  },
-  {
-    slug: "billigaste-timmen",
-    title: "Bästa timmen att köra tvätt & diskmaskin",
-    excerpt:
-      "Praktiska tips för att planera energitunga hushållssysslor. Spara hundratals kronor per år genom att välja rätt timme.",
-    badge: "Sparande",
-  },
-  {
-    slug: "negativa-priser",
-    title: "Negativa elpriser i Sverige – Vad händer?",
-    excerpt:
-      "När elpriset går under noll: varför det händer, hur ofta, och vad det betyder för dig som elkonsument.",
-    badge: "Avancerat",
-  },
-  {
-    slug: "elpriser-2025",
-    title: "Varför är elpriset högt just nu?",
-    excerpt:
-      "En analys av faktorerna bakom dagens elpriser: väder, vind, kärnkraft, och europeiska marknader.",
-    badge: "Aktuellt",
-  },
-  {
-    slug: "minska-elrakning",
-    title: "10 sätt att minska din elräkning med spotpris",
-    excerpt:
-      "Konkreta åtgärder som alla kan vidta för att sänka elräkningen när man har timprisavtal.",
-    badge: "Sparande",
-  },
-];
+// Driven from articles.ts so the guide list can never drift out of sync with
+// the actual article slugs (previously half the cards linked to 404s).
+const articles = articleData.map((a) => ({
+  slug: a.slug,
+  title: a.title,
+  excerpt: a.description,
+  badge: a.category,
+}));
 
 export default function GuidePage() {
   return (

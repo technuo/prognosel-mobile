@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   description:
     "Se aktuella elpriser per timme för hela Sverige. AI-driven 24h-prognos för SE1, SE2, SE3 och SE4. Spara pengar med smarta tips. Helt gratis.",
   alternates: {
-    canonical: "https://prognosel.se",
+    canonical: "https://prognosel.energy",
   },
 };
 
@@ -28,7 +28,7 @@ export default async function LandingPage() {
     "@context": "https://schema.org",
     "@type": "WebApplication",
     name: "PrognosEL",
-    url: "https://prognosel.se",
+    url: "https://prognosel.energy",
     description: "AI-driven elprisprognoser för Sverige. Realtidsdata för SE1–SE4.",
     applicationCategory: "UtilitiesApplication",
     operatingSystem: "Web",
@@ -75,7 +75,7 @@ export default async function LandingPage() {
       {/* Footer */}
       <footer className="landing-footer">
         <div className="landing-footer-inner">
-          <span>© 2025 PrognosEL · Data från Nordpool</span>
+          <span>© 2026 PrognosEL · Data från Nordpool</span>
           <ul className="landing-footer-links">
             <li><a href="/elpriser">Elpriser</a></li>
             <li><a href="/prognos">Prognos</a></li>

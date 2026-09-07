@@ -45,7 +45,6 @@ export const metadata: Metadata = {
     canonical: "https://prognosel.energy",
     languages: {
       "sv-SE": "https://prognosel.energy",
-      "en-SE": "https://prognosel.energy/en",
     },
   },
   verification: {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import NavHeader from "@/components/layout/nav-header";
 import { useLanguage } from "@/hooks/use-language";
 import { useZone } from "@/hooks/use-zone";
@@ -14,33 +14,29 @@ interface Message {
   content: string;
 }
 
-const QUICK_QUESTIONS = [
-  "Best time to run washer?",
-  "EV charging tonight?",
-  "Price spike tomorrow?",
-  "Weekly savings?",
-];
-
-const GREETING: Message = {
-  id: "greeting",
-  role: "assistant",
-  content: "Hi! I'm Sparky. Ask me anything about electricity prices and savings.",
-};
+// Greeting & quick questions are localized inside the component (see below).
 
 export default function SparkyPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { zone } = useZone();
   const { price: currentPrice, loading: priceLoading } = useCurrentPrice(zone);
   const { messages: historyMessages, loaded: historyLoaded, appendMessage } = useChatHistory();
+
+  const greeting = useMemo<Message>(
+    () => ({ id: "greeting", role: "assistant", content: t.sparkyGreeting }),
+    [t]
+  );
+  const quickQuestions = [t.qWasher, t.qEvTonight, t.qPriceSpike, t.qWeeklySavings];
 
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Combine greeting + persisted history
-  const messages = historyLoaded && historyMessages.length > 0
-    ? historyMessages
-    : [GREETING];
+  const messages = useMemo(
+    () => (historyLoaded && historyMessages.length > 0 ? historyMessages : [greeting]),
+    [historyLoaded, historyMessages, greeting]
+  );
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -70,6 +66,7 @@ export default function SparkyPage() {
         body: JSON.stringify({
           message: text,
           zone,
+          lang,
           currentPrice: currentPrice ?? undefined,
         }),
       });
@@ -79,7 +76,7 @@ export default function SparkyPage() {
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: data.response || "I'm having trouble connecting right now. Please try again.",
+        content: data.response || t.sparkyFail,
       };
 
       await appendMessage(aiMsg);
@@ -87,7 +84,7 @@ export default function SparkyPage() {
       const aiMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "Sorry, I couldn't process your request. Please check your connection and try again.",
+        content: t.sparkyErr,
       };
       await appendMessage(aiMsg);
     } finally {
@@ -140,7 +137,7 @@ export default function SparkyPage() {
             {t.quickQuestions}
           </p>
           <div className="flex flex-wrap gap-2">
-            {QUICK_QUESTIONS.map((q, i) => (
+            {quickQuestions.map((q, i) => (
               <button
                 key={i}
                 onClick={() => handleSend(q)}
