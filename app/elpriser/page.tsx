@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   description:
     "Aktuella elpriser per timme för SE1, SE2, SE3 och SE4. Se dagens lägsta, högsta och genomsnittliga spotpris för ditt elområde. Uppdateras i realtid från Nordpool.",
   alternates: {
-    canonical: "https://prognosel.se/elpriser/",
+    canonical: "https://prognosel.energy/elpriser/",
   },
 };
 
@@ -29,7 +29,7 @@ export default async function ElpriserPage() {
     creator: {
       "@type": "Organization",
       name: "PrognosEL",
-      url: "https://prognosel.se",
+      url: "https://prognosel.energy",
     },
   };
 

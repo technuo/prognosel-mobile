@@ -46,7 +46,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: `Elpris ${upperZone} Idag – ${meta.name} Spotpris`,
     description: `Aktuellt elpris för ${upperZone} (${meta.name}). Timvisa spotpriser för ${meta.cities}. Se dagens lägsta, högsta och genomsnittliga pris.`,
     alternates: {
-      canonical: `https://prognosel.se/elpriser/${zone.toLowerCase()}/`,
+      canonical: `https://prognosel.energy/elpriser/${zone.toLowerCase()}/`,
     },
   };
 }

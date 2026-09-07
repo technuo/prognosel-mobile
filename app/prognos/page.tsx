@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description:
     "AI-driven elprisprognos för nästa 24 timmar i SE1–SE4. Se när elen är billigast och planera din förbrukning. Genomsnittligt fel under 8%.",
   alternates: {
-    canonical: "https://prognosel.se/prognos/",
+    canonical: "https://prognosel.energy/prognos/",
   },
 };
 

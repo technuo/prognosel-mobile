@@ -40,7 +40,7 @@ async function fetchTodayPrices(zone: string): Promise<
 
 export async function POST(request: NextRequest) {
   try {
-    const { message, zone, currentPrice } = await request.json();
+    const { message, zone, currentPrice, lang } = await request.json();
 
     const apiKey = process.env.GEMINI_API_KEY;
     const model = process.env.GEMINI_MODEL || "gemini-2.5-flash";
@@ -83,7 +83,8 @@ export async function POST(request: NextRequest) {
       `Your tone is warm, concise, and helpful — like a knowledgeable neighbor.\n\n` +
       `Current context:\n` +
       `- Zone: ${zone || "SE3"}\n` +
-      `- Current price: ${currentPrice ?? "unknown"} öre/kWh` +
+      `- Current price: ${currentPrice ?? "unknown"} öre/kWh\n` +
+      `- Reply in ${lang === "sv" ? "Swedish" : "English"} unless the user writes in another language.` +
       priceContext +
       `\nGuidelines:\n` +
       `1. Base ALL answers on the price data above. Never make up prices.\n` +

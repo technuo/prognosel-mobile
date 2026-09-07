@@ -123,6 +123,13 @@ export interface Translation {
   tomorrow: string;
   askSparky: string;
   quickQuestions: string;
+  sparkyGreeting: string;
+  qWasher: string;
+  qEvTonight: string;
+  qPriceSpike: string;
+  qWeeklySavings: string;
+  sparkyFail: string;
+  sparkyErr: string;
   myTasks: string;
   streak: string;
   of: string;
