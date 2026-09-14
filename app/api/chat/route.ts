@@ -45,13 +45,17 @@ const ACTION_KWH: Record<SuggestionKind, number> = {
 };
 
 function detectKind(message: string): SuggestionKind | null {
-  if (/(elbil|elbilen|\bev\b|electric car|ladda|laddning|charge|charging)/i.test(message)) {
+  if (
+    /(elbil|elbilen|\bev\b|electric car|ladda|laddning|charge|charging|电车|充电|汽車|电动车|汽车充电)/i.test(
+      message
+    )
+  ) {
     return "ev";
   }
-  if (/(diskmaskin|dishwasher)/i.test(message)) return "dishwasher";
-  if (/(tvättmaskin|tvätt|washer|washing)/i.test(message)) return "washer";
+  if (/(diskmaskin|dishwasher|洗碗|洗碗机)/i.test(message)) return "dishwasher";
+  if (/(tvättmaskin|tvätt|washer|washing|洗衣|洗衣机)/i.test(message)) return "washer";
   if (
-    /\b(when|what time|best|cheapest|när|billigast|bästa|timme|timmar|fönster|window|klockan)\b/i.test(
+    /\b(when|what time|best|cheapest|när|billigast|bästa|timme|timmar|fönster|window|klockan)\b|什么时候|几点|最便宜|便宜|时段|时间/i.test(
       message
     )
   ) {
@@ -250,7 +254,7 @@ export async function POST(request: NextRequest) {
         : `\n\n⚡ Today in ${zone}: the cheapest hours are ${cheapHours.map((h) => h.hour).join(", ")} (lowest ${cheapestFloor} öre/kWh).`
       : "";
   const wantsTime =
-    /\b(when|what time|best|cheapest|charge|charging|elbil|batteri|tider|ladda|tvätt|diskmaskin|washer|dishwasher|appliance|köra|starta|när|billigast|bästa|timmar|fönster|window|klockan)\b/i.test(
+    /\b(when|what time|best|cheapest|charge|charging|elbil|batteri|tider|ladda|tvätt|diskmaskin|washer|dishwasher|appliance|köra|starta|när|billigast|bästa|timmar|fönster|window|klockan)\b|什么时候|几点|最便宜|便宜|充电|电车|洗碗机|洗衣机|时段/i.test(
       rawMessage
     );
 
@@ -366,6 +370,30 @@ export async function POST(request: NextRequest) {
       concreteFallback
     ) {
       response = response + concreteFallback;
+    }
+
+    // Fallback: even if no action keyword matched (e.g. the question was in
+    // another language), offer the window the answer already recommends.
+    if (!suggestion && todayPrices && todayPrices.length > 0) {
+      const match = response.match(/(\d{2}:\d{2})\s*[–\-—]\s*(\d{2}:\d{2})/);
+      if (match) {
+        const startIdx = todayPrices.findIndex((p) => p.hour === match[1]);
+        if (startIdx >= 0) {
+          const slice = todayPrices.slice(startIdx, startIdx + WINDOW_LENGTH.generic);
+          const avg = slice.reduce((sum, h) => sum + h.price, 0) / slice.length;
+          const peak = Math.max(...todayPrices.map((p) => p.price));
+          const savings = (Math.max(0, peak - avg) * ACTION_KWH.generic) / 100;
+          suggestion = {
+            kind: "generic",
+            title:
+              lang === "sv"
+                ? `Använd el ${match[1]}–${match[2]}`
+                : `Use electricity ${match[1]}–${match[2]}`,
+            window: `${match[1]}–${match[2]}`,
+            savings: Math.round(savings * 10) / 10,
+          };
+        }
+      }
     }
 
     return NextResponse.json({ response, suggestion });
