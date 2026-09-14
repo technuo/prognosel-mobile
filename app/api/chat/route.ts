@@ -26,6 +26,72 @@ function isAllowedZone(value: unknown): value is (typeof ZONES)[number] {
   return typeof value === "string" && (ZONES as readonly string[]).includes(value);
 }
 
+// ── Action suggestions (drive the "add to tasks?" chip in the chat) ─────────
+type SuggestionKind = "ev" | "dishwasher" | "washer" | "generic";
+
+const WINDOW_LENGTH: Record<SuggestionKind, number> = {
+  ev: 3,
+  dishwasher: 2,
+  washer: 2,
+  generic: 2,
+};
+
+/** Typical energy per action, used for the saving estimate (kWh). */
+const ACTION_KWH: Record<SuggestionKind, number> = {
+  ev: 30,
+  dishwasher: 1.5,
+  washer: 1,
+  generic: 2,
+};
+
+function detectKind(message: string): SuggestionKind | null {
+  if (
+    /(elbil|elbilen|\bev\b|electric car|ladda|laddning|charge|charging|电车|充电|汽車|电动车|汽车充电)/i.test(
+      message
+    )
+  ) {
+    return "ev";
+  }
+  if (/(diskmaskin|dishwasher|洗碗|洗碗机)/i.test(message)) return "dishwasher";
+  if (/(tvättmaskin|tvätt|washer|washing|洗衣|洗衣机)/i.test(message)) return "washer";
+  if (
+    /\b(when|what time|best|cheapest|när|billigast|bästa|timme|timmar|fönster|window|klockan)\b|什么时候|几点|最便宜|便宜|时段|时间/i.test(
+      message
+    )
+  ) {
+    return "generic";
+  }
+  return null;
+}
+
+function nextHourLabel(label: string): string {
+  const h = (parseInt(label, 10) + 1) % 24;
+  return `${String(h).padStart(2, "0")}:00`;
+}
+
+/** Cheapest CONTIGUOUS window of `length` hours (hours must be sorted asc). */
+function bestContiguousWindow(
+  hours: { hour: string; price: number }[],
+  length: number
+): { start: string; end: string; avg: number } | null {
+  if (hours.length < length) return null;
+  let best: { index: number; end: string; avg: number } | null = null;
+  for (let i = 0; i + length <= hours.length; i++) {
+    const slice = hours.slice(i, i + length);
+    const avg = slice.reduce((sum, h) => sum + h.price, 0) / length;
+    if (!best || avg < best.avg) {
+      best = { index: i, end: slice[slice.length - 1].hour, avg };
+    }
+  }
+  if (!best) return null;
+  const after = hours[best.index + length];
+  return {
+    start: hours[best.index].hour,
+    end: after ? after.hour : nextHourLabel(best.end),
+    avg: best.avg,
+  };
+}
+
 /** Read-only Supabase client bound to the request cookies (session check). */
 function clientFromRequest(request: NextRequest) {
   return createServerClient(
@@ -188,9 +254,54 @@ export async function POST(request: NextRequest) {
         : `\n\n⚡ Today in ${zone}: the cheapest hours are ${cheapHours.map((h) => h.hour).join(", ")} (lowest ${cheapestFloor} öre/kWh).`
       : "";
   const wantsTime =
-    /\b(when|what time|best|cheapest|charge|charging|elbil|batteri|tider|ladda|tvätt|diskmaskin|washer|dishwasher|appliance|köra|starta|när|billigast|bästa|timmar|fönster|window|klockan)\b/i.test(
+    /\b(when|what time|best|cheapest|charge|charging|elbil|batteri|tider|ladda|tvätt|diskmaskin|washer|dishwasher|appliance|köra|starta|när|billigast|bästa|timmar|fönster|window|klockan)\b|什么时候|几点|最便宜|便宜|充电|电车|洗碗机|洗衣机|时段/i.test(
       rawMessage
     );
+
+  // Structured suggestion the client can offer as a one-tap task.
+  const kind = detectKind(rawMessage);
+  let suggestion: {
+    kind: SuggestionKind;
+    title: string;
+    window: string;
+    savings: number;
+  } | null = null;
+
+  if (kind && todayPrices && todayPrices.length > 0) {
+    const win = bestContiguousWindow(todayPrices, WINDOW_LENGTH[kind]);
+    if (win) {
+      const peak = Math.max(...todayPrices.map((p) => p.price));
+      const savings =
+        (Math.max(0, peak - win.avg) * ACTION_KWH[kind]) / 100; // öre/kWh × kWh → kr
+      const titles: Record<SuggestionKind, { sv: string; en: string }> = {
+        ev: {
+          sv: `Ladda elbilen ${win.start}–${win.end}`,
+          en: `Charge the EV ${win.start}–${win.end}`,
+        },
+        dishwasher: {
+          sv: `Starta diskmaskinen ${win.start}–${win.end}`,
+          en: `Run the dishwasher ${win.start}–${win.end}`,
+        },
+        washer: {
+          sv: `Kör tvättmaskinen ${win.start}–${win.end}`,
+          en: `Run the washing machine ${win.start}–${win.end}`,
+        },
+        generic: {
+          sv: `Använd el ${win.start}–${win.end}`,
+          en: `Use electricity ${win.start}–${win.end}`,
+        },
+      };
+      suggestion = {
+        kind,
+        title: lang === "sv" ? titles[kind].sv : titles[kind].en,
+        window: `${win.start}–${win.end}`,
+        savings: Math.round(savings * 10) / 10,
+      };
+      priceContext +=
+        `\nRecommended action window today: ${suggestion.window} ` +
+        `(saves ~${suggestion.savings} kr vs the most expensive hour — use THIS window when answering).\n`;
+    }
+  }
 
   const systemInstruction =
     `You are "Sparky", a friendly and practical Swedish electricity price assistant. ` +
@@ -212,7 +323,9 @@ export async function POST(request: NextRequest) {
     `6. If the price data is missing, say that prices for later today are not published yet ` +
     `(Nord Pool publishes around 12:00 CET) and suggest checking back — never invent hours.\n` +
     `7. Match the user's language strictly. If they write in English, reply in English. ` +
-    `If they write in Swedish, reply in Swedish.`;
+    `If they write in Swedish, reply in Swedish.\n` +
+    `8. Do NOT ask the user whether to save the tip as a task — the app shows that ` +
+    `option automatically. Just give the advice.`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
@@ -259,7 +372,31 @@ export async function POST(request: NextRequest) {
       response = response + concreteFallback;
     }
 
-    return NextResponse.json({ response });
+    // Fallback: even if no action keyword matched (e.g. the question was in
+    // another language), offer the window the answer already recommends.
+    if (!suggestion && todayPrices && todayPrices.length > 0) {
+      const match = response.match(/(\d{2}:\d{2})\s*[–\-—]\s*(\d{2}:\d{2})/);
+      if (match) {
+        const startIdx = todayPrices.findIndex((p) => p.hour === match[1]);
+        if (startIdx >= 0) {
+          const slice = todayPrices.slice(startIdx, startIdx + WINDOW_LENGTH.generic);
+          const avg = slice.reduce((sum, h) => sum + h.price, 0) / slice.length;
+          const peak = Math.max(...todayPrices.map((p) => p.price));
+          const savings = (Math.max(0, peak - avg) * ACTION_KWH.generic) / 100;
+          suggestion = {
+            kind: "generic",
+            title:
+              lang === "sv"
+                ? `Använd el ${match[1]}–${match[2]}`
+                : `Use electricity ${match[1]}–${match[2]}`,
+            window: `${match[1]}–${match[2]}`,
+            savings: Math.round(savings * 10) / 10,
+          };
+        }
+      }
+    }
+
+    return NextResponse.json({ response, suggestion });
   } catch (error) {
     const timedOut = error instanceof Error && error.name === "AbortError";
     console.error(
