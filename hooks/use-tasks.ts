@@ -2,25 +2,39 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase/client";
+import { computeStreakFromDates, stockholmDateKey } from "@/lib/streak";
 import type { ZoneCode, Task } from "@/types";
 
 const STORAGE_KEY = "prognosel-tasks";
 const SYNC_KEY = "prognosel-task-sync";
 const STREAK_KEY = "prognosel-streak";
-const STREAK_DATE_KEY = "prognosel-streak-date";
 
 /**
- * Offline-first sync queue.
+ * Offline-first task store.
  *
- * Every mutation is applied to local state immediately AND recorded here, so a
- * failed (or slow) Supabase write can never make the UI "forget" what the user
- * did. The queue is flushed to Supabase on load and after each mutation; ops
- * are only removed once the server confirmed them.
+ * Mutations are applied to local state immediately AND recorded in a durable
+ * queue, so a failed or slow Supabase write can never make the UI "forget"
+ * what the user did. The queue is flushed on load and after each mutation;
+ * an op is removed only once the server confirmed it.
+ *
+ * The streak is derived from `tasks.completed_at` (server data) instead of a
+ * localStorage counter, so it survives a device change and cannot drift from
+ * the tasks themselves.
  */
 type SyncOp =
   | { op: "insert"; task: Task; zone: ZoneCode }
   | { op: "update"; id: string; done: boolean }
   | { op: "delete"; id: string };
+
+interface ServerTaskRow {
+  id: string;
+  title: string;
+  status: string;
+  estimated_savings: number;
+  description: string | null;
+  scheduled_at: string | null;
+  completed_at?: string | null;
+}
 
 function loadLocalTasks(): Task[] {
   if (typeof window === "undefined") return [];
@@ -39,6 +53,11 @@ function saveLocalTasks(tasks: Task[]) {
   } catch {
     /* storage full / private mode — ignore */
   }
+}
+
+function clearLocalTasks() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(STORAGE_KEY);
 }
 
 function readQueue(): SyncOp[] {
@@ -70,19 +89,7 @@ function loadLocalStreak(): number {
   }
 }
 
-function saveLocalStreak(streak: number) {
-  if (typeof window === "undefined") return;
-  localStorage.setItem(STREAK_KEY, String(streak));
-}
-
-function dbToTask(row: {
-  id: string;
-  title: string;
-  status: string;
-  estimated_savings: number;
-  description: string | null;
-  scheduled_at: string | null;
-}): Task {
+function dbToTask(row: ServerTaskRow): Task {
   return {
     id: row.id,
     title: row.title,
@@ -110,9 +117,34 @@ function applyQueue(tasks: Task[], ops: SyncOp[]): Task[] {
 }
 
 /**
- * Push queued ops to Supabase. Returns true when the queue is empty again.
- * Successful ops are removed; failures stay queued for the next attempt.
+ * Load tasks for a zone. Retries without `completed_at` when the live schema
+ * lacks that column, so a missing column can never hide the user's tasks.
  */
+async function fetchServerTasks(uid: string, zone: ZoneCode): Promise<ServerTaskRow[]> {
+  const withStamp = await supabase
+    .from("tasks")
+    .select("id, title, status, estimated_savings, description, scheduled_at, completed_at")
+    .eq("user_id", uid)
+    .eq("zone", zone)
+    .order("created_at", { ascending: false });
+
+  if (!withStamp.error) return (withStamp.data ?? []) as ServerTaskRow[];
+
+  const withoutStamp = await supabase
+    .from("tasks")
+    .select("id, title, status, estimated_savings, description, scheduled_at")
+    .eq("user_id", uid)
+    .eq("zone", zone)
+    .order("created_at", { ascending: false });
+
+  if (withoutStamp.error) {
+    console.error("[tasks] load failed:", withoutStamp.error.message);
+    return [];
+  }
+  return (withoutStamp.data ?? []) as ServerTaskRow[];
+}
+
+/** Push queued ops to Supabase. Returns true when the queue is empty again. */
 async function flushQueue(userId: string): Promise<boolean> {
   const queue = readQueue();
   if (queue.length === 0) return true;
@@ -137,8 +169,7 @@ async function flushQueue(userId: string): Promise<boolean> {
           remaining.push(op);
         }
       } else if (op.op === "update") {
-        // Only send the columns that certainly exist; completed_at is a
-        // best-effort extra so a schema mismatch can't block the status change.
+        // Only columns that certainly exist; completed_at is best-effort.
         const { error } = await supabase
           .from("tasks")
           .update({ status: op.done ? "completed" : "pending" })
@@ -155,7 +186,6 @@ async function flushQueue(userId: string): Promise<boolean> {
             .eq("id", op.id)
             .eq("user_id", userId);
           if (stampError) {
-            // Non-fatal: the status change already persisted.
             console.warn("[tasks] completed_at not stored:", stampError.message);
           }
         }
@@ -183,10 +213,13 @@ async function flushQueue(userId: string): Promise<boolean> {
 export function useTasks(zone: ZoneCode) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loaded, setLoaded] = useState(false);
-  const [streak, setStreak] = useState(0);
+  const [completedDates, setCompletedDates] = useState<string[]>([]);
+  const [localStreak, setLocalStreak] = useState(0);
   const [userId, setUserId] = useState<string | null>(null);
   const [syncError, setSyncError] = useState(false);
   const flushInFlight = useRef(false);
+
+  const streak = userId ? computeStreakFromDates(completedDates) : localStreak;
 
   const syncNow = useCallback(async (uid: string) => {
     if (flushInFlight.current) return;
@@ -211,34 +244,41 @@ export function useTasks(zone: ZoneCode) {
       setUserId(uid);
 
       let serverTasks: Task[] = [];
+      let dates: string[] = [];
 
       if (uid) {
-        const { data, error } = await supabase
-          .from("tasks")
-          .select("id, title, status, estimated_savings, description, scheduled_at")
-          .eq("user_id", uid)
-          .eq("zone", zone)
-          .order("created_at", { ascending: false });
+        const rows = await fetchServerTasks(uid, zone);
+        serverTasks = rows.map(dbToTask);
+        dates = rows
+          .filter((r) => r.status === "completed" && r.completed_at)
+          .map((r) => stockholmDateKey(r.completed_at as string));
 
-        if (data && !error) {
-          serverTasks = data.map(dbToTask);
-        } else {
-          if (error) console.error("[tasks] load failed:", error.message);
-          serverTasks = loadLocalTasks().filter(
-            (t) => !t.scheduled_at || t.scheduled_at.startsWith(zone)
-          );
+        // One-time migration: tasks created before signing in existed only in
+        // localStorage. Import them into the account, then clear the local copy.
+        const locals = loadLocalTasks();
+        if (locals.length > 0) {
+          const known = new Set(serverTasks.map((t) => t.id));
+          const extras = locals.filter((t) => !known.has(t.id));
+          if (extras.length > 0) {
+            writeQueue([
+              ...readQueue(),
+              ...extras.map((task) => ({ op: "insert", task, zone }) as SyncOp),
+            ]);
+            serverTasks = [...extras, ...serverTasks];
+          }
+          clearLocalTasks();
         }
       } else {
         serverTasks = loadLocalTasks();
       }
 
-      // Overlay anything the user did that the server has not confirmed yet,
-      // so a page switch can never silently undo a completion.
+      // Overlay anything the user did that the server has not confirmed yet.
       const merged = uid ? applyQueue(serverTasks, readQueue()) : serverTasks;
 
       if (!cancelled) {
         setTasks(merged);
-        setStreak(loadLocalStreak());
+        setCompletedDates(dates);
+        setLocalStreak(loadLocalStreak());
         setLoaded(true);
       }
 
@@ -290,45 +330,25 @@ export function useTasks(zone: ZoneCode) {
       setTasks(updated);
 
       if (userId) {
-        // Record the intent first, then try to push it to the server.
         writeQueue([...readQueue(), { op: "update", id, done: newDone }]);
         saveLocalTasks(updated);
+        if (newDone) {
+          const today = stockholmDateKey();
+          setCompletedDates((prev) => (prev.includes(today) ? prev : [today, ...prev]));
+        }
         await syncNow(userId);
       } else {
         saveLocalTasks(updated);
-      }
-
-      // Update streak when completing a task (once per day)
-      if (newDone) {
-        const today = new Date().toISOString().slice(0, 10);
-        const lastDate = typeof window !== "undefined"
-          ? localStorage.getItem(STREAK_DATE_KEY)
-          : null;
-
-        let newStreak = streak;
-        if (lastDate === today) {
-          // Already completed a task today — streak unchanged
-        } else if (lastDate) {
-          const last = new Date(lastDate);
-          const now = new Date(today);
-          const diffDays = (now.getTime() - last.getTime()) / (1000 * 60 * 60 * 24);
-          if (diffDays === 1) {
-            newStreak = streak + 1;
-          } else {
-            newStreak = 1; // Reset after missing a day
+        if (newDone) {
+          const next = computeStreakFromDates([...completedDates, stockholmDateKey()]);
+          setLocalStreak(next);
+          if (typeof window !== "undefined") {
+            localStorage.setItem(STREAK_KEY, String(next));
           }
-        } else {
-          newStreak = 1; // First completion ever
-        }
-
-        setStreak(newStreak);
-        saveLocalStreak(newStreak);
-        if (typeof window !== "undefined") {
-          localStorage.setItem(STREAK_DATE_KEY, today);
         }
       }
     },
-    [tasks, userId, streak, syncNow]
+    [tasks, userId, completedDates, syncNow]
   );
 
   const deleteTask = useCallback(
