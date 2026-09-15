@@ -9,7 +9,7 @@ import { track } from "@/lib/analytics";
 import { Flame, Zap, Plus, Trash2 } from "lucide-react";
 
 export default function TasksPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const { zone } = useZone();
   const {
     tasks,
@@ -21,6 +21,7 @@ export default function TasksPage() {
     totalSavings,
     progress,
     streak,
+    syncError,
   } = useTasks(zone);
 
   const [newTitle, setNewTitle] = useState("");
@@ -62,6 +63,14 @@ export default function TasksPage() {
       <NavHeader title={t.todo} zone={zone} />
 
       <div className="px-5 pt-2 pb-24">
+        {syncError && (
+          <div className="mb-4 rounded-2xl border border-warn/40 bg-warn/10 px-4 py-3 text-xs text-ink-2 leading-relaxed">
+            {lang === "sv"
+              ? "Kunde inte synka med servern just nu – dina ändringar sparas lokalt och skickas igen automatiskt."
+              : "Couldn't reach the server just now – your changes are saved on this device and will sync automatically."}
+          </div>
+        )}
+
         {/* Day Streak Card */}
         <div
           className="rounded-[20px] p-5 mb-4 text-white relative overflow-hidden"
