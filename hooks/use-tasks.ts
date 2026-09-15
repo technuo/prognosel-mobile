@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/lib/supabase/client";
-import { computeStreakFromDates, stockholmDateKey } from "@/lib/streak";
+import { computeStreakFromDates, addLocalCompletionDate, loadLocalCompletionDates, mergeDates, stockholmDateKey } from "@/lib/streak";
 import type { ZoneCode, Task } from "@/types";
 
 const STORAGE_KEY = "prognosel-tasks";
@@ -253,6 +253,10 @@ export function useTasks(zone: ZoneCode) {
           .filter((r) => r.status === "completed" && r.completed_at)
           .map((r) => stockholmDateKey(r.completed_at as string));
 
+        // The device keeps its own record of completion dates too, so the
+        // streak still works when `completed_at` is missing from the schema.
+        dates = mergeDates(dates, loadLocalCompletionDates());
+
         // One-time migration: tasks created before signing in existed only in
         // localStorage. Import them into the account, then clear the local copy.
         const locals = loadLocalTasks();
@@ -334,7 +338,8 @@ export function useTasks(zone: ZoneCode) {
         saveLocalTasks(updated);
         if (newDone) {
           const today = stockholmDateKey();
-          setCompletedDates((prev) => (prev.includes(today) ? prev : [today, ...prev]));
+          addLocalCompletionDate(today);
+          setCompletedDates((prev) => mergeDates(prev, [today]));
         }
         await syncNow(userId);
       } else {
