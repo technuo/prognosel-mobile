@@ -10,6 +10,7 @@ import { useWeeklyPrices } from "@/hooks/use-weekly-prices";
 import { useStats } from "@/hooks/use-stats";
 import { useTasks } from "@/hooks/use-tasks";
 import { track } from "@/lib/analytics";
+import { bestContiguousWindow, hourLabel, savingsVsPeak } from "@/lib/windows";
 import type { ZoneCode, HourlyPrice } from "@/types";
 
 interface Tip {
@@ -20,55 +21,45 @@ interface Tip {
   estimatedSavings: number;
 }
 
-const hh = (h: number) => String(h).padStart(2, "0");
-
 /**
  * Suggest two concrete actions with honest, approximate savings wording.
  * Savings are "vs the most expensive hour" estimates (retail öre/kWh based)
  * and deliberately phrased with "~" / "upp till" — they are not guarantees.
+ * The EV window uses the SAME contiguous-window algorithm as Sparky, so the
+ * chat answer and this card can't disagree.
  */
 function generateTips(hours: HourlyPrice[], zone: ZoneCode): Tip[] {
-  const valid = hours.filter((h) => h.price > 0);
-  if (!valid.length) return [];
+  const points = hours
+    .filter((h) => h.price > 0)
+    .map((h) => ({ hour: hourLabel(h.hour), price: h.price }));
 
-  const prices = valid.map((h) => ({
-    hour: h.hour,
-    price: h.price,
-  }));
+  if (points.length === 0) return [];
 
-  if (prices.length === 0) return [];
-
-  // Sort by price to find cheapest hours
-  const sorted = [...prices].sort((a, b) => a.price - b.price);
+  const sorted = [...points].sort((a, b) => a.price - b.price);
   const cheapest = sorted[0];
-  const cheapest3 = sorted.slice(0, 3).sort((a, b) => a.hour - b.hour);
-  const mostExpensive = sorted[sorted.length - 1];
 
   const tips: Tip[] = [];
 
   // Tip 1: dishwasher after the cheapest hour (~1.5 kWh per load)
-  if (cheapest) {
-    const saving = Math.max(0, mostExpensive.price - cheapest.price) * 1.5 / 100; // ~1.5 kWh dishwasher → SEK
-    tips.push({
-      icon: "💡",
-      text: `Starta diskmaskinen efter ${hh(cheapest.hour)}:00 — spara ~${saving.toFixed(0)} kr jämfört med dyraste timmen`,
-      zone,
-      taskTitle: `Starta diskmaskinen efter ${hh(cheapest.hour)}:00`,
-      estimatedSavings: saving,
-    });
-  }
+  const dishSaving = savingsVsPeak(points, cheapest.price, 1.5);
+  tips.push({
+    icon: "💡",
+    text: `Starta diskmaskinen efter ${cheapest.hour} — spara ~${dishSaving.toFixed(0)} kr jämfört med dyraste timmen`,
+    zone,
+    taskTitle: `Starta diskmaskinen efter ${cheapest.hour}`,
+    estimatedSavings: dishSaving,
+  });
 
-  // Tip 2: EV charging in the cheapest hours (~30 kWh per charge)
-  if (cheapest3.length >= 3) {
-    const start = cheapest3[0].hour;
-    const end = cheapest3[cheapest3.length - 1].hour;
-    const saving = Math.max(0, mostExpensive.price - cheapest3[0].price) * 30 / 100; // ~30 kWh EV charge → SEK
+  // Tip 2: EV charging in the cheapest CONTIGUOUS 3-hour window (~30 kWh)
+  const evWindow = bestContiguousWindow(points, 3);
+  if (evWindow) {
+    const evSaving = savingsVsPeak(points, evWindow.avg, 30);
     tips.push({
       icon: "🔋",
-      text: `Ladda elbilen ${hh(start)}:00–${hh(end + 1)}:00 — upp till ~${saving.toFixed(0)} kr billigare än topptimmen`,
+      text: `Ladda elbilen ${evWindow.start}–${evWindow.end} — upp till ~${evSaving.toFixed(0)} kr billigare än topptimmen`,
       zone,
-      taskTitle: `Ladda elbilen ${hh(start)}:00–${hh(end + 1)}:00`,
-      estimatedSavings: saving,
+      taskTitle: `Ladda elbilen ${evWindow.start}–${evWindow.end}`,
+      estimatedSavings: evSaving,
     });
   }
 
@@ -156,6 +147,11 @@ export default function HomePage() {
   const maxPrice = chartData.length ? Math.max(...chartData.map((d) => d.p)) : 0;
 
   const tips = useMemo(() => generateTips(today?.hours || [], zone), [today, zone]);
+
+  const [selectedHour, setSelectedHour] = useState<string | null>(null);
+  const selectedPoint = selectedHour
+    ? chartData.find((d) => d.h === selectedHour)
+    : undefined;
 
   useEffect(() => {
     void track("dashboard_view", { zone });
@@ -246,31 +242,61 @@ export default function HomePage() {
               {forecastLoading ? "Laddar priser…" : "Inga prisdata tillgängliga"}
             </div>
           ) : (
-            <div className="flex items-end gap-[3px] h-[120px] pb-6 relative">
-              {chartData.map((d, i) => {
-                const h = Math.max((d.p / (maxPrice * 1.1)) * 100, 4);
-                const isMin = d.p === minPrice;
-                const isMax = d.p === maxPrice;
-                return (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1 relative">
-                    <div
-                      className="w-full rounded-t-[3px] transition-all min-h-[4px]"
-                      style={{
-                        height: `${h}%`,
-                        background: isMin ? "var(--good)" : isMax ? "var(--bad)" : "var(--accent)",
-                        opacity: isMin || isMax ? 1 : 0.65,
-                      }}
-                    />
-                    <span
-                      className="text-[8px] font-mono text-faint absolute -bottom-5"
-                      style={{ transform: "rotate(-45deg)", transformOrigin: "top left" }}
+            <>
+              <div className="flex items-end gap-[3px] h-[120px] pb-6 relative">
+                {chartData.map((d, i) => {
+                  const h = Math.max((d.p / (maxPrice * 1.1)) * 100, 4);
+                  const isMin = d.p === minPrice;
+                  const isMax = d.p === maxPrice;
+                  const isSelected = selectedHour === d.h;
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setSelectedHour(isSelected ? null : d.h)}
+                      aria-label={`${d.h} – ${d.p.toFixed(0)} öre/kWh`}
+                      className="flex-1 flex flex-col items-center gap-1 relative cursor-pointer bg-transparent border-0 p-0"
                     >
-                      {d.h}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+                      {(isMin || isMax) && (
+                        <span
+                          className="absolute -top-3.5 text-[10px] font-mono font-semibold"
+                          style={{ color: isMin ? "var(--good)" : "var(--bad)" }}
+                        >
+                          {d.p.toFixed(0)}
+                        </span>
+                      )}
+                      <div
+                        className="w-full rounded-t-[3px] transition-all min-h-[4px]"
+                        style={{
+                          height: `${h}%`,
+                          background: isMin
+                            ? "var(--good)"
+                            : isMax
+                            ? "var(--bad)"
+                            : "var(--accent)",
+                          opacity: isSelected || isMin || isMax ? 1 : 0.65,
+                          boxShadow: isSelected ? "0 0 0 2px var(--ink)" : "none",
+                        }}
+                      />
+                      <span
+                        className="text-[10px] font-mono text-faint absolute -bottom-5"
+                        style={{ transform: "rotate(-45deg)", transformOrigin: "top left" }}
+                      >
+                        {d.h}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="mt-2 text-xs text-ink-2 font-medium min-h-[18px]">
+                {selectedPoint
+                  ? `${selectedPoint.h} · ${selectedPoint.p.toFixed(0)} öre/kWh` +
+                    (minPrice > 0
+                      ? ` · ${(selectedPoint.p / minPrice).toFixed(1)}× billigaste timmen`
+                      : "")
+                  : "Tryck på en stapel för att läsa av priset"}
+              </div>
+            </>
           )}
         </div>
 

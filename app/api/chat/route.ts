@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import { toRetailPrice } from "@/lib/pricing";
 import { hourLabelInZone } from "@/lib/time";
+import { bestContiguousWindow } from "@/lib/windows";
 
 const NORDAPI_BASE = "https://nordapi.ee/api/v1";
 const ZONES = ["SE1", "SE2", "SE3", "SE4"] as const;
@@ -62,34 +63,6 @@ function detectKind(message: string): SuggestionKind | null {
     return "generic";
   }
   return null;
-}
-
-function nextHourLabel(label: string): string {
-  const h = (parseInt(label, 10) + 1) % 24;
-  return `${String(h).padStart(2, "0")}:00`;
-}
-
-/** Cheapest CONTIGUOUS window of `length` hours (hours must be sorted asc). */
-function bestContiguousWindow(
-  hours: { hour: string; price: number }[],
-  length: number
-): { start: string; end: string; avg: number } | null {
-  if (hours.length < length) return null;
-  let best: { index: number; end: string; avg: number } | null = null;
-  for (let i = 0; i + length <= hours.length; i++) {
-    const slice = hours.slice(i, i + length);
-    const avg = slice.reduce((sum, h) => sum + h.price, 0) / length;
-    if (!best || avg < best.avg) {
-      best = { index: i, end: slice[slice.length - 1].hour, avg };
-    }
-  }
-  if (!best) return null;
-  const after = hours[best.index + length];
-  return {
-    start: hours[best.index].hour,
-    end: after ? after.hour : nextHourLabel(best.end),
-    avg: best.avg,
-  };
 }
 
 /** Read-only Supabase client bound to the request cookies (session check). */
