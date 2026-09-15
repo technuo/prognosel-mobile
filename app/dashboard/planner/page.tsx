@@ -5,14 +5,22 @@ import NavHeader from "@/components/layout/nav-header";
 import { useLanguage } from "@/hooks/use-language";
 import { useZone } from "@/hooks/use-zone";
 import { useWeeklyPrices } from "@/hooks/use-weekly-prices";
+import { hourLabel, savingsVsPeak, topContiguousWindows } from "@/lib/windows";
 import type { DayPriceData } from "@/types";
 
+/**
+ * Colour-blind safe 3-step scale (teal → amber → vermillion, based on the
+ * Okabe–Ito palette and darkened for contrast on the paper background).
+ * Green/red pairs are indistinguishable for ~8% of men, so they are avoided.
+ */
+const HEAT_COLORS = ["#0E7A6B", "#B26B00", "#C0430F"] as const;
+
 function getHeatColor(price: number, min: number, max: number): string {
-  if (max === min) return "#5C8A5E";
+  if (max === min) return HEAT_COLORS[0];
   const ratio = (price - min) / (max - min);
-  if (ratio < 0.33) return "#5C8A5E";
-  if (ratio < 0.66) return "#C8922E";
-  return "#B85D40";
+  if (ratio < 0.33) return HEAT_COLORS[0];
+  if (ratio < 0.66) return HEAT_COLORS[1];
+  return HEAT_COLORS[2];
 }
 
 function LoadingPlanner() {
@@ -72,13 +80,16 @@ export default function PlannerPage() {
       ? dayPrices.reduce((a, b) => a + b, 0) / dayPrices.length
       : 0;
 
-  const bestWindow = useMemo(() => {
-    if (!day || !day.hasData) return [];
-    const sorted = day.hours
-      .map((h) => ({ price: h.price, hour: h.hour }))
-      .sort((a, b) => a.price - b.price);
-    return sorted.slice(0, 3);
-  }, [day]);
+  const dayPoints = useMemo(
+    () => (day?.hours || []).map((h) => ({ hour: hourLabel(h.hour), price: h.price })),
+    [day]
+  );
+
+  // Cheapest CONTIGUOUS 3-hour windows (same algorithm as Sparky & the home card)
+  const bestWindows = useMemo(
+    () => topContiguousWindows(dayPoints, 3, 3),
+    [dayPoints]
+  );
 
   if (loading) {
     return (
@@ -190,7 +201,7 @@ export default function PlannerPage() {
                   }}
                 >
                   <span
-                    className="text-[10px] font-mono font-semibold"
+                    className="text-[11px] font-mono font-semibold"
                     style={{ color: getHeatColor(h.price, dayMin, dayMax) }}
                   >
                     {h.price.toFixed(0)}
@@ -204,6 +215,17 @@ export default function PlannerPage() {
               <span>12:00</span>
               <span>18:00</span>
               <span>23:00</span>
+            </div>
+            <div className="flex items-center gap-1.5 mt-2 text-[11px] text-muted">
+              <span>Lägre</span>
+              {HEAT_COLORS.map((c) => (
+                <span
+                  key={c}
+                  className="w-3.5 h-3.5 rounded-[4px]"
+                  style={{ backgroundColor: c + "33", border: `1px solid ${c}` }}
+                />
+              ))}
+              <span>Högre</span>
             </div>
           </div>
         ) : (
@@ -221,15 +243,18 @@ export default function PlannerPage() {
         )}
 
         {/* Best Windows */}
-        {day && day.hasData && bestWindow.length > 0 && (
+        {day && day.hasData && bestWindows.length > 0 && (
           <div className="bg-card rounded-[20px] p-5 shadow-sm border border-line">
-            <h3 className="font-serif text-lg font-semibold text-ink mb-3">
+            <h3 className="font-serif text-lg font-semibold text-ink mb-1">
               {t.bestWindows}
             </h3>
+            <p className="text-xs text-muted mb-3">
+              Billigaste sammanhängande 3-timmarsfönstren
+            </p>
             <div className="flex flex-col gap-2.5">
-              {bestWindow.map((w, i) => (
+              {bestWindows.map((w, i) => (
                 <div
-                  key={i}
+                  key={w.start}
                   className="flex items-center justify-between py-2 border-b border-line last:border-0"
                 >
                   <div className="flex items-center gap-3">
@@ -238,27 +263,27 @@ export default function PlannerPage() {
                     </div>
                     <div>
                       <div className="text-sm font-medium text-ink">
-                        {String(w.hour).padStart(2, "0")}:00 –{" "}
-                        {String(w.hour + 1).padStart(2, "0")}:00
+                        {w.start} – {w.end}
                       </div>
-                      <div className="text-xs text-muted">Billigaste timmen</div>
+                      <div className="text-xs text-muted">3 timmar · snittpris</div>
                     </div>
                   </div>
                   <div className="text-right">
                     <div className="font-serif text-lg font-semibold text-good">
-                      {w.price.toFixed(2)}
+                      {w.avg.toFixed(0)}
                     </div>
-                    <div className="text-[10px] text-muted">öre/kWh</div>
+                    <div className="text-[11px] text-muted">öre/kWh</div>
                   </div>
                 </div>
               ))}
             </div>
             <div className="mt-4 p-3 bg-accent-soft/50 rounded-xl">
               <p className="text-sm text-accent-hi font-medium">
-                Spara ~{((dayMax - dayMin) * 1.5 / 100).toFixed(0)} kr jämfört med topptimmen
+                Spara ~{savingsVsPeak(dayPoints, bestWindows[0].avg, 1.5).toFixed(0)} kr jämfört
+                med topptimmen
               </p>
               <p className="text-xs text-muted mt-0.5">
-                Genom att köra energitunga apparater i de billigaste timmarna (uppskattning)
+                Genom att köra tunga apparater i de billigaste fönstren (uppskattning)
               </p>
             </div>
           </div>
