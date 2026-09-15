@@ -93,6 +93,11 @@ export default function TasksPage() {
               {completedCount} av {tasks.length} uppgifter klara · Sparat{" "}
               {totalSavings.toFixed(0)} kr
             </div>
+            <div className="mt-1 text-[10px] text-white/60">
+              {lang === "sv"
+                ? "Serien sparas i ditt konto och följer med mellan enheter"
+                : "Your streak is stored in your account and follows you across devices"}
+            </div>
           </div>
           <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-20">
             <Zap size={80} />

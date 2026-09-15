@@ -26,11 +26,43 @@ function saveLocalMessages(messages: ChatMessage[]) {
   localStorage.setItem(CHAT_STORAGE_KEY, JSON.stringify(messages));
 }
 
+function removeLocalMessages() {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(CHAT_STORAGE_KEY);
+}
+
 export function useChatHistory() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const sessionIdRef = useRef<string | null>(null);
+
+  const ensureSession = useCallback(
+    async (explicitUserId?: string) => {
+      const uid = explicitUserId ?? userId;
+      if (!uid) return null;
+      if (sessionIdRef.current) return sessionIdRef.current;
+
+      const { data, error } = await supabase
+        .from("chat_sessions")
+        .insert({
+          user_id: uid,
+          title: "Sparky Chat",
+          is_active: true,
+        })
+        .select("id")
+        .single();
+
+      if (error) {
+        console.error("Failed to create chat session:", error);
+        return null;
+      }
+
+      sessionIdRef.current = data.id;
+      return data.id;
+    },
+    [userId]
+  );
 
   // Load on mount
   useEffect(() => {
@@ -62,21 +94,53 @@ export function useChatHistory() {
             .order("created_at", { ascending: true })
             .limit(50);
 
-          if (!cancelled && msgs) {
-            setMessages(
-              msgs.map((m) => ({
-                id: m.id,
-                role: m.role as "user" | "assistant",
-                content: m.content,
-              }))
-            );
+          const serverMessages = (msgs ?? []).map((m) => ({
+            id: m.id,
+            role: m.role as "user" | "assistant",
+            content: m.content,
+          }));
+
+          if (serverMessages.length === 0) {
+            // One-time migration: chat that only ever existed in localStorage
+            // (before signing in) is imported into the account, then cleared.
+            const local = loadLocalMessages();
+            if (local.length > 0) {
+              await supabase.from("chat_messages").insert(
+                local.map((m) => ({
+                  session_id: sid,
+                  role: m.role,
+                  content: m.content,
+                  source: "sparky",
+                }))
+              );
+              removeLocalMessages();
+              if (!cancelled) setMessages(local);
+            }
+          } else if (!cancelled) {
+            setMessages(serverMessages);
           }
         } else {
-          // No active session yet — start with empty + initial greeting will be added by caller
+          // No active session yet — import any local history, else stay empty
           sessionIdRef.current = null;
+          const local = loadLocalMessages();
+          if (local.length > 0) {
+            const sid = await ensureSession(uid);
+            if (sid) {
+              await supabase.from("chat_messages").insert(
+                local.map((m) => ({
+                  session_id: sid,
+                  role: m.role,
+                  content: m.content,
+                  source: "sparky",
+                }))
+              );
+              removeLocalMessages();
+              if (!cancelled) setMessages(local);
+            }
+          }
         }
       } else {
-        // Guest: localStorage
+        // Not signed in: localStorage only
         setMessages(loadLocalMessages());
       }
 
@@ -85,30 +149,7 @@ export function useChatHistory() {
 
     load();
     return () => { cancelled = true; };
-  }, []);
-
-  const ensureSession = useCallback(async () => {
-    if (!userId) return null;
-    if (sessionIdRef.current) return sessionIdRef.current;
-
-    const { data, error } = await supabase
-      .from("chat_sessions")
-      .insert({
-        user_id: userId,
-        title: "Sparky Chat",
-        is_active: true,
-      })
-      .select("id")
-      .single();
-
-    if (error) {
-      console.error("Failed to create chat session:", error);
-      return null;
-    }
-
-    sessionIdRef.current = data.id;
-    return data.id;
-  }, [userId]);
+  }, [ensureSession]);
 
   const appendMessage = useCallback(
     async (msg: ChatMessage) => {
