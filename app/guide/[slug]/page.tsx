@@ -2,6 +2,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getArticleBySlug, getAllArticleSlugs, ArticleData, ArticleBlock } from "./articles";
+import { slugifyHeading } from "./slug";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -121,7 +122,7 @@ function ContentBlock({ block }: { block: ArticleBlock }) {
       const headingMargin = block.level === 3 ? "28px 0 12px" : "40px 0 16px";
       return (
         <HeadingTag
-          id={block.text?.toLowerCase().replace(/[^a-z0-9\s-]/g, "").replace(/\s+/g, "-").substring(0, 40)}
+          id={slugifyHeading(block.text ?? "")}
           style={{
             fontFamily: "'Playfair Display', 'Source Serif 4', Georgia, serif",
             fontSize: headingSize,
@@ -278,7 +279,7 @@ export default async function ArticlePage({ params }: Props) {
             {article.toc.map((item) => (
               <li key={item.id} style={{ marginBottom: 6 }}>
                 <a
-                  href={`#${item.id}`}
+                  href={`#${slugifyHeading(item.text)}`}
                   style={{
                     fontSize: 14,
                     color: "#5C554C",

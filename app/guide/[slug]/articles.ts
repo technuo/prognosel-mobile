@@ -9,6 +9,9 @@ export interface ArticleData {
   readTime: string;
   published: string;
   updated: string;
+  // `id` must equal slugifyHeading(text) — see slug.ts. The TOC link is derived
+  // from `text` at render time so a stale id can't break the page, but keep it
+  // in sync anyway so the data stays truthful.
   toc: { id: string; text: string; level: number }[];
   content: ArticleBlock[];
   faq: { q: string; a: string }[];
@@ -36,10 +39,10 @@ export const articles: ArticleData[] = [
     updated: "2025-06-02",
     toc: [
       { id: "vad-ar-spotpris", text: "Vad är spotpris?", level: 2 },
-      { id: "hur-satts-priset", text: "Hur sätts spotpriset?", level: 2 },
+      { id: "hur-satts-spotpriset", text: "Hur sätts spotpriset?", level: 2 },
       { id: "dygnets-prismonster", text: "Dygnets prismönster", level: 2 },
-      { id: "ar-det-billigare", text: "Är spotpris alltid billigare?", level: 2 },
-      { id: "sa-sparar-du", text: "Så sparar du pengar med spotpris", level: 2 },
+      { id: "ar-spotpris-alltid-billigare", text: "Är spotpris alltid billigare?", level: 2 },
+      { id: "sa-sparar-du-pengar-med-spotpris", text: "Så sparar du pengar med spotpris", level: 2 },
       { id: "sammanfattning", text: "Sammanfattning", level: 2 },
     ],
     content: [
@@ -161,11 +164,11 @@ export const articles: ArticleData[] = [
     published: "2025-06-02",
     updated: "2025-06-02",
     toc: [
-      { id: "lage-just-nu", text: "Läget just nu", level: 2 },
-      { id: "drivkrafter", text: "Huvuddrivkrafter bakom höga priser", level: 2 },
-      { id: "skillnad-mellan-omraden", text: "Skillnad mellan elområden", level: 2 },
-      { id: "vad-kan-du-gora", text: "Vad kan du göra åt det?", level: 2 },
-      { id: "prognos", text: "Prognos: När blir det bättre?", level: 2 },
+      { id: "laget-just-nu", text: "Läget just nu", level: 2 },
+      { id: "huvuddrivkrafter-bakom-hoga-priser", text: "Huvuddrivkrafter bakom höga priser", level: 2 },
+      { id: "skillnad-mellan-elomraden", text: "Skillnad mellan elområden", level: 2 },
+      { id: "vad-kan-du-gora-at-det", text: "Vad kan du göra åt det?", level: 2 },
+      { id: "prognos-nar-blir-det-battre", text: "Prognos: När blir det bättre?", level: 2 },
     ],
     content: [
       {
@@ -290,11 +293,11 @@ export const articles: ArticleData[] = [
     published: "2025-06-02",
     updated: "2025-06-02",
     toc: [
-      { id: "dygnets-billigaste", text: "Dygnets billigaste timmar", level: 2 },
+      { id: "dygnets-billigaste-timmar", text: "Dygnets billigaste timmar", level: 2 },
       { id: "hur-mycket-sparar-du", text: "Hur mycket sparar du?", level: 2 },
-      { id: "praktiska-tips", text: "Praktiska tips för varje apparat", level: 2 },
-      { id: "veckoplanering", text: "Veckoplanering med prognos", level: 2 },
-      { id: "smart-hem", text: "Smart hem och automation", level: 2 },
+      { id: "praktiska-tips-for-varje-apparat", text: "Praktiska tips för varje apparat", level: 2 },
+      { id: "veckoplanering-med-prognos", text: "Veckoplanering med prognos", level: 2 },
+      { id: "smart-hem-och-automation", text: "Smart hem och automation", level: 2 },
     ],
     content: [
       {
@@ -464,10 +467,10 @@ export const articles: ArticleData[] = [
     updated: "2026-06-10",
     toc: [
       { id: "vad-kostar-elen-idag", text: "Vad kostar elen idag?", level: 2 },
-      { id: "varfor-varierar-priset", text: "Varför varierar priset timme för timme?", level: 2 },
-      { id: "billigaste-timmarna", text: "Billigaste timmarna idag", level: 2 },
-      { id: "skillnad-mellan-omraden", text: "Prisskillnad mellan SE1–SE4", level: 2 },
-      { id: "sa-foljer-du-priset", text: "Så följer du elpriset idag", level: 2 },
+      { id: "varfor-varierar-priset-timme-for-timme", text: "Varför varierar priset timme för timme?", level: 2 },
+      { id: "billigaste-timmarna-idag", text: "Billigaste timmarna idag", level: 2 },
+      { id: "prisskillnad-mellan-se1se4", text: "Prisskillnad mellan SE1–SE4", level: 2 },
+      { id: "sa-foljer-du-elpriset-idag", text: "Så följer du elpriset idag", level: 2 },
     ],
     content: [
       {
