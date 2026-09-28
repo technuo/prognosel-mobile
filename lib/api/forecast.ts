@@ -1,15 +1,25 @@
 import { supabase } from "@/lib/supabase/client";
 import { eurMwhToWholesaleSekKwh, toRetailPrice } from "@/lib/pricing";
 import { SWEDEN_TZ } from "@/lib/time";
+import { nordapiUrl } from "./nordapi-endpoint";
 import type { ZoneCode, ForecastRecord, ZoneStats } from "@/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const NORDAPI_BASE = "https://nordapi.ee/api/v1";
-const NORDAPI_PROXY =
-  typeof window !== "undefined"
-    ? "/api/nordapi"
-    : `${process.env.NEXT_PUBLIC_API_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000")}/api/nordapi`;
 const FETCH_TIMEOUT_MS = 5000; // 5-second timeout for all external fetches
+
+/**
+ * Server-side price fetches are cached for 60s, matching the `revalidate = 60`
+ * already declared on the pages that call them.
+ *
+ * `cache: "no-store"` looked harmless but made Next throw its internal
+ * "Dynamic server usage" signal during prerendering. The try/catch below
+ * swallowed that signal, so instead of bailing out to dynamic rendering the
+ * app silently fell through to the stale Supabase fallback — and when that was
+ * empty too, the build failed with a misleading "all sources failed".
+ * Caching the response is what the pages ask for anyway, and it keeps every
+ * page view from turning into a burst of upstream calls.
+ */
+const PRICE_CACHE = { next: { revalidate: 60 } } as const;
 
 export interface CurrentPrice {
   zone: string;
@@ -80,7 +90,7 @@ export async function fetchForecastsFromApi(
 ): Promise<ForecastRecord[]> {
   const res = await fetchWithTimeout(
     `${API_BASE}/forecast/${zone}/${horizon}?limit=${limit}`,
-    { cache: "no-store" }
+    PRICE_CACHE
   );
   if (!res.ok) throw new Error("Failed to fetch forecasts from API");
   return res.json();
@@ -88,13 +98,18 @@ export async function fetchForecastsFromApi(
 
 // ── NordAPI.ee: real-time current price ────────────────────────────────────
 async function fetchNordapiCurrentPrice(zone: ZoneCode): Promise<CurrentPrice | null> {
+  const url = nordapiUrl("current", zone);
   try {
-    const res = await fetchWithTimeout(`${NORDAPI_PROXY}?endpoint=current&zone=${zone}`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
+    const res = await fetchWithTimeout(url, PRICE_CACHE);
+    if (!res.ok) {
+      console.warn(`[forecast] nordapi current ${zone}: HTTP ${res.status} <- ${url}`);
+      return null;
+    }
     const data = await res.json();
-    if (!data.success) return null;
+    if (!data.success) {
+      console.warn(`[forecast] nordapi current ${zone}: success=false <- ${url}`);
+      return null;
+    }
     // nordapi returns EUR/kWh and SEK/kWh directly
     const priceEurKwh = parseFloat(data.price_eur_kwh);
     const priceSekKwh = parseFloat(data.price_local_kwh);
@@ -105,7 +120,10 @@ async function fetchNordapiCurrentPrice(zone: ZoneCode): Promise<CurrentPrice | 
       timestamp: data.hour_start,
       source: "nordapi",
     };
-  } catch {
+  } catch (err) {
+    // Don't swallow the reason: a silent catch here hid a 404 on every request
+    // for weeks (the URL used to point at the FastAPI host).
+    console.error(`[forecast] nordapi current ${zone} failed <- ${url}:`, err);
     return null;
   }
 }
@@ -115,17 +133,22 @@ async function fetchNordapiZoneStats(
   zone: ZoneCode,
   hours: number = 24
 ): Promise<ZoneStats | null> {
+  const url = nordapiUrl("today", zone);
   try {
-    const res = await fetchWithTimeout(`${NORDAPI_PROXY}?endpoint=today&zone=${zone}`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
+    const res = await fetchWithTimeout(url, PRICE_CACHE);
+    if (!res.ok) {
+      console.warn(`[forecast] nordapi today ${zone}: HTTP ${res.status} <- ${url}`);
+      return null;
+    }
     const data = await res.json();
     const prices = data.data as Array<{
       hour_start: string;
       price_local_kwh: number | string;
     }>;
-    if (!prices || prices.length === 0) return null;
+    if (!prices || prices.length === 0) {
+      console.warn(`[forecast] nordapi today ${zone}: empty data <- ${url}`);
+      return null;
+    }
 
     // Aggregate 15-min intervals into hourly averages
     const hourly = new Map<
@@ -181,7 +204,8 @@ async function fetchNordapiZoneStats(
       currency: "öre",
       period_hours: recent.length,
     };
-  } catch {
+  } catch (err) {
+    console.error(`[forecast] nordapi today ${zone} failed <- ${url}:`, err);
     return null;
   }
 }
@@ -199,7 +223,7 @@ export async function fetchCurrentPrice(zone: ZoneCode): Promise<CurrentPrice> {
   // 2. Secondary: FastAPI backend (with timeout to avoid Render cold-start hang)
   try {
     const res = await fetchWithTimeout(`${API_BASE}/current-price/${zone}`, {
-      cache: "no-store",
+      ...PRICE_CACHE,
     });
     if (res.ok) return res.json();
   } catch {
@@ -241,7 +265,7 @@ export async function fetchZoneStats(
   // 2. Secondary: FastAPI backend (with timeout to avoid Render cold-start hang)
   try {
     const res = await fetchWithTimeout(`${API_BASE}/stats/${zone}?hours=${hours}`, {
-      cache: "no-store",
+      ...PRICE_CACHE,
     });
     if (res.ok) return res.json();
   } catch {
