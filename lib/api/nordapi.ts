@@ -10,8 +10,7 @@
  */
 
 import type { ZoneCode } from "@/types";
-
-const PROXY_BASE = typeof window !== "undefined" ? "" : "http://localhost:3001";
+import { nordapiUrl } from "./nordapi-endpoint";
 
 export interface NordapiPricePoint {
   hour_start: string; // ISO 8601 UTC, e.g. "2026-05-25T00:00:00Z"
@@ -103,7 +102,7 @@ async function fetchHistory(
   startDate: string,
   endDate: string
 ): Promise<NordapiPricePoint[]> {
-  const url = `${PROXY_BASE}/api/nordapi?endpoint=history&zone=${zone}&start_date=${startDate}&end_date=${endDate}`;
+  const url = nordapiUrl("history", zone, { startDate, endDate });
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`NordAPI history failed: ${res.status}`);
@@ -114,7 +113,7 @@ async function fetchHistory(
 
 /** Fetch today's real-time prices via local proxy. */
 async function fetchToday(zone: ZoneCode): Promise<NordapiPricePoint[]> {
-  const url = `${PROXY_BASE}/api/nordapi?endpoint=today&zone=${zone}`;
+  const url = nordapiUrl("today", zone);
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`NordAPI today failed: ${res.status}`);
