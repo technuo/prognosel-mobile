@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { userFromRequest } from "@/lib/api/request-auth";
 import { toRetailPrice } from "@/lib/pricing";
 import { hourLabelInZone } from "@/lib/time";
 import { bestContiguousWindow } from "@/lib/windows";
@@ -63,22 +63,6 @@ function detectKind(message: string): SuggestionKind | null {
     return "generic";
   }
   return null;
-}
-
-/** Read-only Supabase client bound to the request cookies (session check). */
-function clientFromRequest(request: NextRequest) {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder",
-    {
-      cookies: {
-        getAll: () => request.cookies.getAll(),
-        setAll: () => {
-          // no session writes happen in this route
-        },
-      },
-    }
-  );
 }
 
 function rateLimit(key: string, now: number): boolean {
@@ -165,12 +149,13 @@ export async function POST(request: NextRequest) {
       ? body.currentPrice
       : undefined;
 
-  // Sparky lives inside the authenticated dashboard — require a session.
-  const supabase = clientFromRequest(request);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Sparky lives behind authentication. Accepts either transport: a session
+  // cookie (web dashboard) or a bearer token (the Android app).
+  const { user, error: authError } = await userFromRequest(request);
   if (!user) {
+    if (authError) {
+      console.warn("[chat] auth rejected:", authError);
+    }
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 

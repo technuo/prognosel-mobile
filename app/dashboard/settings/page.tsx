@@ -16,6 +16,7 @@ import {
   LogOut,
   Mail,
   Shield,
+  Trash2,
 } from "lucide-react";
 
 export default function SettingsPage() {
@@ -34,6 +35,45 @@ export default function SettingsPage() {
     taskReminders: false,
   });
   const [, setSavingNotifications] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  /**
+   * Permanently deletes the account and everything stored with it.
+   *
+   * Two deliberate steps: the button only reveals a confirmation panel, and the
+   * API call carries an explicit confirmation word. There is no undo, and the
+   * server refuses the request without that word.
+   */
+  async function handleDeleteAccount() {
+    setDeleting(true);
+    setDeleteError(null);
+
+    try {
+      const res = await fetch("/api/delete-account/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm: "DELETE" }),
+      });
+
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        throw new Error(data.error || `Request failed (${res.status})`);
+      }
+
+      // The session is gone server-side by now, so clear the local copy only —
+      // a normal sign-out would try to revoke a token that no longer exists.
+      await supabase.auth.signOut({ scope: "local" });
+      router.replace("/login/");
+      router.refresh();
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error ? error.message : "Något gick fel. Försök igen."
+      );
+      setDeleting(false);
+    }
+  }
 
   useEffect(() => {
     async function loadUser() {
@@ -240,6 +280,60 @@ export default function SettingsPage() {
           <LogOut size={16} />
           {t.signOut}
         </button>
+
+        {/* Delete account — required by Google Play for any app with accounts */}
+        <div className="mt-3">
+          {confirmingDelete ? (
+            <div className="rounded-[20px] bg-bad/5 border border-bad/30 p-5">
+              <div className="flex items-start gap-3 mb-4">
+                <Trash2 size={18} className="text-bad mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-semibold text-ink mb-1">
+                    Radera kontot permanent?
+                  </p>
+                  <p className="text-xs text-muted leading-relaxed">
+                    Ditt konto, dina uppgifter, din serie och din chatt med
+                    Sparky raderas. Det går inte att ångra.
+                  </p>
+                </div>
+              </div>
+
+              {deleteError && (
+                <p className="text-xs text-bad mb-3 leading-relaxed">
+                  {deleteError}
+                </p>
+              )}
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => void handleDeleteAccount()}
+                  disabled={deleting}
+                  className="flex-1 py-2.5 rounded-xl bg-bad text-white text-sm font-semibold cursor-pointer disabled:opacity-50"
+                >
+                  {deleting ? "Raderar…" : "Ja, radera kontot"}
+                </button>
+                <button
+                  onClick={() => {
+                    setConfirmingDelete(false);
+                    setDeleteError(null);
+                  }}
+                  disabled={deleting}
+                  className="flex-1 py-2.5 rounded-xl bg-card border border-line text-ink-2 text-sm font-medium cursor-pointer disabled:opacity-50"
+                >
+                  Avbryt
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmingDelete(true)}
+              className="w-full flex items-center justify-center gap-2 py-3 text-xs text-faint hover:text-bad transition-colors cursor-pointer"
+            >
+              <Trash2 size={14} />
+              Radera konto
+            </button>
+          )}
+        </div>
 
         {/* Version */}
         <p className="text-center text-xs text-faint mt-6">{t.version}</p>
