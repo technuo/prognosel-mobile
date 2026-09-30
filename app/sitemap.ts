@@ -16,6 +16,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${baseUrl}/guide/elpriser-2025/`, priority: 0.7, changeFrequency: "monthly" },
     { url: `${baseUrl}/guide/billigaste-timmen/`, priority: 0.7, changeFrequency: "monthly" },
     { url: `${baseUrl}/guide/elpriser-idag/`, priority: 0.85, changeFrequency: "daily" },
+    { url: `${baseUrl}/guide/billigaste-tiden-att-ladda-elbil/`, priority: 0.7, changeFrequency: "monthly" },
     { url: `${baseUrl}/integritetspolicy/`, priority: 0.3, changeFrequency: "yearly" },
     { url: `${baseUrl}/radera-konto/`, priority: 0.3, changeFrequency: "yearly" },
   ];

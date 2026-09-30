@@ -618,6 +618,155 @@ export const articles: ArticleData[] = [
       },
     ],
   },
+  {
+    slug: "billigaste-tiden-att-ladda-elbil",
+    title: "Billigaste tiden att ladda elbil – nattladdning sparar mest",
+    description:
+      "När ska du ladda elbilen hemma för lägst elpris? Nattladdning mellan 02:00 och 06:00 är nästan alltid billigast. Här får du siffror, schema och räkneexempel.",
+    keywords: [
+      "billigaste tiden att ladda elbil",
+      "ladda elbil billigast",
+      "när ladda elbilen",
+      "nattladdning elbil",
+      "elbil laddning billig tid",
+    ],
+    category: "Elbil",
+    readTime: "6 min",
+    published: "2026-09-30",
+    updated: "2026-09-30",
+    toc: [
+      { id: "nar-ar-elen-billigast-att-ladda-elbilen", text: "När är elen billigast att ladda elbilen?", level: 2 },
+      { id: "vilka-timmar-ar-billigast-pa-natten", text: "Vilka timmar är billigast på natten?", level: 2 },
+      { id: "hur-mycket-sparar-du-pa-nattladdning", text: "Hur mycket sparar du på nattladdning?", level: 2 },
+      { id: "sa-schemalagger-du-laddningen", text: "Så schemalägger du laddningen", level: 2 },
+      { id: "vad-kostar-det-att-ladda-elbilen-hemma", text: "Vad kostar det att ladda elbilen hemma?", level: 2 },
+    ],
+    content: [
+      {
+        type: "paragraph",
+        text: "Ladda elbilen mellan klockan 02:00 och 06:00 på natten – det är nästan alltid den billigaste tiden på dygnet. Då är elpriset ofta 50–70% lägre än under kvällsrusningen 17:00–20:00, när alla är hemma och laddar samtidigt. En nattladdning sparar därför ofta 25–50 kronor per laddning jämfört med att koppla in bilen direkt efter jobbet.",
+      },
+      {
+        type: "highlight",
+        text: "Den dyraste tiden att ladda är 17:00–20:00. Laddar du i stället 02:00–06:00 betalar du ofta mindre än hälften per kilowattimme – utan att ändra något annat i vardagen.",
+      },
+      { type: "heading", text: "När är elen billigast att ladda elbilen?", level: 2 },
+      {
+        type: "paragraph",
+        text: "Det korta svaret är natten. Elpriset sätts varje timme på elbörsen Nord Pool och följer ett ganska stabilt dygnsmönster: när färre använder el är den billigare. Eftersom de flesta sover mellan 02:00 och 06:00, och industrin samtidigt går på sparlåga, brukar priset ligga som lägst just där.",
+      },
+      {
+        type: "list",
+        items: [
+          "02:00–06:00: Billigast. Låg förbrukning och ofta mycket vindkraft i nätet.",
+          "11:00–14:00: En andra lågperiod mitt på dagen, särskilt sommartid när solcellerna levererar.",
+          "17:00–20:00: Dyrast. Alla är hemma, lagar mat och laddar samtidigt.",
+          "21:00–01:00: Priset sjunker successivt när folk går och lägger sig.",
+        ],
+      },
+      { type: "heading", text: "Vilka timmar är billigast på natten?", level: 2 },
+      {
+        type: "paragraph",
+        text: "Mönstret ovan gäller en genomsnittlig dag, men den exakta billigaste timmen skiftar från dygn till dygn beroende på väder, vind och elpriserna i Europa. Det enda sättet att veta säkert är att titta på morgondagens priskurva.",
+      },
+      {
+        type: "paragraph",
+        text: "En bra tumregel är att leta efter den billigaste två- eller tretimmarsperioden på natten. En elbil laddar ofta fullt på 6–10 timmar i en vanlig laddbox, så du behöver sällan pricka in en enda timme – det räcker att starta laddningen när priset börjar sjunka.",
+      },
+      {
+        type: "link",
+        href: "/prognos",
+        label: "Se 24h-prognos för elpriset i ditt elområde →",
+      },
+      { type: "heading", text: "Hur mycket sparar du på nattladdning?", level: 2 },
+      {
+        type: "paragraph",
+        text: "Prisskillnaden mellan natt och kväll är ofta 30–70 öre per kilowattimme. Med ett 60 kWh-batteri blir skillnaden snabbt märkbar. Här är ett räkneexempel baserat på en prisskillnad på 50 öre/kWh:",
+      },
+      {
+        type: "list",
+        items: [
+          "Liten elbil (40 kWh): sparar cirka 20 kronor per laddning.",
+          "Mellanstor elbil (60 kWh): sparar cirka 30 kronor per laddning.",
+          "Större elbil (80 kWh): sparar cirka 40 kronor per laddning.",
+        ],
+      },
+      {
+        type: "paragraph",
+        text: "Laddar du två gånger i veckan innebär det ungefär 1 500–4 000 kronor per år. Observera att detta är en uppskattning – den faktiska besparingen beror på dagens elpris och hur mycket du laddar.",
+      },
+      {
+        type: "link",
+        href: "/guide/billigaste-timmen/",
+        label: "Läs: billigaste timmen för tvätt och disk →",
+      },
+      { type: "heading", text: "Så schemalägger du laddningen", level: 2 },
+      {
+        type: "paragraph",
+        text: "Du behöver inte sitta uppe till klockan två. Det finns flera sätt att automatisera nattladdningen:",
+      },
+      {
+        type: "list",
+        items: [
+          "Bilens egen app: De flesta elbilar låter dig ställa in en starttid, eller ett fönster när bilen får ladda.",
+          "Laddbox med timstyrning: Många moderna laddboxar kan schemaläggas eller kopplas till elpriset automatiskt.",
+          "Smarta uttag och hemassistenter: Ett smart uttag eller en plattform som Home Assistant kan starta laddningen när priset sjunker under en viss nivå.",
+        ],
+      },
+      {
+        type: "paragraph",
+        text: "Om du har ett timprisavtal (spotpris) är det först då schemaläggningen verkligen lönar sig. Med fastpris spelar tiden ingen roll för priset.",
+      },
+      { type: "heading", text: "Vad kostar det att ladda elbilen hemma?", level: 2 },
+      {
+        type: "paragraph",
+        text: "Hemmaladdning räknas i öre per kilowattimme. Du betalar elhandelspriset plus elnätsavgift och skatt, och priset varierar med ditt elområde:",
+      },
+      {
+        type: "list",
+        items: [
+          "SE1 och SE2 (norra Sverige): lägst elpris, ofta 30–60 öre/kWh nattetid.",
+          "SE3 (Stockholm med omnejd): högre förbrukning, något högre priser.",
+          "SE4 (södra Sverige): högst priser, mest känsligt för europeiska elpriser.",
+        ],
+      },
+      {
+        type: "paragraph",
+        text: "Priserna ovan är riktmärken och exkluderar moms och påslag. För exakt vad det kostar just nu i ditt område, se PrognosEL:s timpriser.",
+      },
+      {
+        type: "highlight",
+        text: "I vinter, betala inte mer för elen än nödvändigt. Se gratis vilka timmar som är billigast ikväll – och planera laddningen därefter.",
+      },
+      {
+        type: "link",
+        href: "/elpriser",
+        label: "Se aktuella elpriser per timme →",
+      },
+    ],
+    faq: [
+      {
+        q: "När på dygnet är det billigast att ladda elbilen?",
+        a: "Vanligtvis mellan 02:00 och 06:00 på natten. Då är elförbrukningen lägst och priset ofta 50–70% lägre än under kvällsrusningen 17:00–20:00. Den exakta billigaste timmen varierar dag för dag, så kolla morgondagens priskurva i PrognosEL.",
+      },
+      {
+        q: "Måste jag ha ett timprisavtal för att spara?",
+        a: "Ja. Med timprisavtal (spotprisavtal) betalar du olika pris varje timme, så nattladdning blir billigare. Med ett fastprisavtal kostar elen lika mycket oavsett tid på dygnet, och schemalagd laddning påverkar då inte priset.",
+      },
+      {
+        q: "Hur mycket kan jag spara på att ladda på natten?",
+        a: "Baserat på en prisskillnad på 50 öre/kWh sparar du cirka 20–40 kronor per laddning beroende på batteristorlek. Laddar du två gånger i veckan blir det ungefär 1 500–4 000 kronor per år.",
+      },
+      {
+        q: "Hur schemalägger jag laddningen?",
+        a: "Använd bilens egen app, laddboxens timstyrning eller ett smart uttag. Sätt laddningen att starta under den billigaste perioden på natten, ofta 02:00–06:00.",
+      },
+      {
+        q: "Är det alltid billigast på natten?",
+        a: "Nästan alltid, men inte undantagslöst. Vid mycket vind kan priset vara lågt även på dagen, och vid kallt väder kan natten bli dyrare än normalt. Kontrollera alltid morgondagens prognos innan du planerar.",
+      },
+    ],
+  },
 ];
 
 export function getArticleBySlug(slug: string): ArticleData | undefined {
