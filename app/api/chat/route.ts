@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerClient } from "@supabase/ssr";
+import { userFromRequest } from "@/lib/api/request-auth";
 import { toRetailPrice } from "@/lib/pricing";
 import { hourLabelInZone } from "@/lib/time";
 import { bestContiguousWindow } from "@/lib/windows";
@@ -63,22 +63,6 @@ function detectKind(message: string): SuggestionKind | null {
     return "generic";
   }
   return null;
-}
-
-/** Read-only Supabase client bound to the request cookies (session check). */
-function clientFromRequest(request: NextRequest) {
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co",
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder",
-    {
-      cookies: {
-        getAll: () => request.cookies.getAll(),
-        setAll: () => {
-          // no session writes happen in this route
-        },
-      },
-    }
-  );
 }
 
 function rateLimit(key: string, now: number): boolean {
@@ -165,12 +149,13 @@ export async function POST(request: NextRequest) {
       ? body.currentPrice
       : undefined;
 
-  // Sparky lives inside the authenticated dashboard — require a session.
-  const supabase = clientFromRequest(request);
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Sparky lives behind authentication. Accepts either transport: a session
+  // cookie (web dashboard) or a bearer token (the Android app).
+  const { user, error: authError } = await userFromRequest(request);
   if (!user) {
+    if (authError) {
+      console.warn("[chat] auth rejected:", authError);
+    }
     return NextResponse.json({ error: "Authentication required" }, { status: 401 });
   }
 
@@ -298,7 +283,12 @@ export async function POST(request: NextRequest) {
     `7. Match the user's language strictly. If they write in English, reply in English. ` +
     `If they write in Swedish, reply in Swedish.\n` +
     `8. Do NOT ask the user whether to save the tip as a task — the app shows that ` +
-    `option automatically. Just give the advice.`;
+    `option automatically. Just give the advice.\n` +
+    `9. Reply in plain text only. Do not use markdown: no asterisks for emphasis, ` +
+    `no headings, no bullet characters. The chat bubble renders text literally, so ` +
+    `markup reaches the user as visible punctuation — write "02:00–05:00", not ` +
+    `"**02:00–05:00**". If you want to show a calculation, write it as a plain ` +
+    `sentence.`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);

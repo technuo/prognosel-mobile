@@ -123,7 +123,14 @@ export default function IntegritetspolicyPage() {
         <ul style={list}>
           <li><strong>Åtkomst:</strong> du kan begära en kopia av de uppgifter vi har om dig.</li>
           <li><strong>Rättelse:</strong> du kan be oss korrigera felaktiga uppgifter.</li>
-          <li><strong>Radering:</strong> du kan be oss radera ditt konto och dina uppgifter när som helst.</li>
+          <li>
+            <strong>Radering:</strong> du kan radera ditt konto och dina uppgifter
+            när som helst, direkt i appen under Inställningar. Se{" "}
+            <Link href="/radera-konto/" style={{ color: "#C4623A" }}>
+              så raderar du ditt konto
+            </Link>
+            .
+          </li>
           <li><strong>Begränsning och invändning:</strong> du kan invända mot behandling som grundas på berättigat intresse.</li>
           <li><strong>Dataportabilitet:</strong> du kan få ut dina uppgifter i ett maskinläsbart format.</li>
         </ul>
