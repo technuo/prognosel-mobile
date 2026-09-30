@@ -283,7 +283,12 @@ export async function POST(request: NextRequest) {
     `7. Match the user's language strictly. If they write in English, reply in English. ` +
     `If they write in Swedish, reply in Swedish.\n` +
     `8. Do NOT ask the user whether to save the tip as a task — the app shows that ` +
-    `option automatically. Just give the advice.`;
+    `option automatically. Just give the advice.\n` +
+    `9. Reply in plain text only. Do not use markdown: no asterisks for emphasis, ` +
+    `no headings, no bullet characters. The chat bubble renders text literally, so ` +
+    `markup reaches the user as visible punctuation — write "02:00–05:00", not ` +
+    `"**02:00–05:00**". If you want to show a calculation, write it as a plain ` +
+    `sentence.`;
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), GEMINI_TIMEOUT_MS);
