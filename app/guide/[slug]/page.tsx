@@ -17,11 +17,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const article = getArticleBySlug(slug);
   if (!article) {
-    return { title: "Artikel hittades inte | PrognosEL" };
+    // No site suffix here: app/layout.tsx already applies the
+    // `template: "%s | PrognosEL"`, so appending it again rendered
+    // "… | PrognosEL | PrognosEL" on every article page.
+    return { title: "Artikel hittades inte" };
   }
 
   return {
-    title: `${article.title} | PrognosEL`,
+    title: article.title,
     description: article.description,
     keywords: article.keywords,
     alternates: {
