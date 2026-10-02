@@ -4,7 +4,7 @@
   "outputDirectory": ".next",
   "crons": [
     {
-      "path": "/api/push/tick",
+      "path": "/api/push/tick/",
       "schedule": "0 5 * * *"
     }
   ]
