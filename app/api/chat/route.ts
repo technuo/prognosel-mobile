@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { fetchTodayHourly } from "@/lib/api/today";
 import { userFromRequest } from "@/lib/api/request-auth";
-import { toRetailPrice } from "@/lib/pricing";
-import { hourLabelInZone } from "@/lib/time";
 import { bestContiguousWindow } from "@/lib/windows";
 
-const NORDAPI_BASE = "https://nordapi.ee/api/v1";
 const ZONES = ["SE1", "SE2", "SE3", "SE4"] as const;
 const DEFAULT_ZONE = "SE3";
 
@@ -16,12 +14,6 @@ const GEMINI_MAX_OUTPUT_TOKENS = 1024;
 const RATE_WINDOW_MS = 60_000;
 const RATE_MAX_REQUESTS = 20;
 const rateBuckets = new Map<string, number[]>();
-
-const TODAY_CACHE_TTL_MS = 120_000;
-const todayPriceCache = new Map<
-  string,
-  { at: number; data: { hour: string; price: number }[] | null }
->();
 
 function isAllowedZone(value: unknown): value is (typeof ZONES)[number] {
   return typeof value === "string" && (ZONES as readonly string[]).includes(value);
@@ -81,49 +73,6 @@ function rateLimit(key: string, now: number): boolean {
   return true;
 }
 
-interface HourlyPrice {
-  hour: string;
-  price: number;
-}
-
-async function fetchTodayPrices(zone: string): Promise<HourlyPrice[] | null> {
-  const now = Date.now();
-  const cached = todayPriceCache.get(zone);
-  if (cached && now - cached.at < TODAY_CACHE_TTL_MS) return cached.data;
-
-  try {
-    const res = await fetch(`${NORDAPI_BASE}/electricity/today/${zone}`, {
-      cache: "no-store",
-    });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const prices = data.data as
-      | { hour_start: string; price_local_kwh: number | string }[]
-      | undefined;
-    if (!prices || prices.length === 0) return null;
-
-    // Aggregate 15-min intervals into hourly averages, in Stockholm time.
-    const hourly = new Map<string, { sum: number; count: number }>();
-    for (const p of prices) {
-      const key = hourLabelInZone(p.hour_start);
-      const entry = hourly.get(key) ?? { sum: 0, count: 0 };
-      entry.sum += toRetailPrice(parseFloat(String(p.price_local_kwh)));
-      entry.count += 1;
-      hourly.set(key, entry);
-    }
-
-    const result = Array.from(hourly.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([hour, v]) => ({ hour, price: Math.round(v.sum / v.count) }));
-
-    todayPriceCache.set(zone, { at: now, data: result });
-    return result;
-  } catch {
-    todayPriceCache.set(zone, { at: now, data: null });
-    return null;
-  }
-}
-
 export async function POST(request: NextRequest) {
   const startedAt = Date.now();
 
@@ -175,7 +124,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "AI service not configured" }, { status: 500 });
   }
 
-  const todayPrices = await fetchTodayPrices(zone);
+  const todayPrices = await fetchTodayHourly(zone);
   let priceContext = "";
   if (todayPrices && todayPrices.length > 0) {
     const prices = todayPrices.map((p) => p.price);
