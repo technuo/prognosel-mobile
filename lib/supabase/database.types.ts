@@ -226,8 +226,41 @@ export interface Database {
           cheapest_hour: string;
         };
       };
+      device_tokens: {
+        Row: {
+          id: string;
+          user_id: string;
+          token: string;
+          platform: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          token: string;
+          platform?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          token?: string;
+          platform?: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+      };
     };
     Functions: {
+      // Assigns this device's push token to the calling user. SECURITY DEFINER
+      // so a device that already has a token under another account can be moved
+      // rather than failing on the unique index.
+      register_device_token: {
+        Args: { p_token: string; p_platform?: string };
+        Returns: undefined;
+      };
       get_user_savings_summary: {
         Args: { user_uuid: string };
         Returns: {
