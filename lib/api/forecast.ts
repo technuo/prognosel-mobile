@@ -5,7 +5,11 @@ import { nordapiUrl } from "./nordapi-endpoint";
 import type { ZoneCode, ForecastRecord, ZoneStats } from "@/types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const FETCH_TIMEOUT_MS = 5000; // 5-second timeout for all external fetches
+// NordAPI.ee's `/electricity/current/*` endpoint measured 4.7–7.2s on
+// 2026-10-03; a 5s timeout aborted most requests before the body arrived
+// (436 `AbortError`s in one day). Keep this under Vercel's 10s function
+// budget so a slow-but-successful response isn't cut off by the platform.
+const FETCH_TIMEOUT_MS = 9000;
 
 /**
  * Server-side price fetches are cached for 60s, matching the `revalidate = 60`

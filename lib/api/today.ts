@@ -13,6 +13,7 @@ import type { ZoneCode } from "@/types";
 
 const NORDAPI_BASE = "https://nordapi.ee/api/v1";
 const CACHE_TTL_MS = 120_000;
+const FETCH_TIMEOUT_MS = 9000; // match forecast.ts; stay under Vercel's 10s budget
 
 export interface HourlyPrice {
   /** "HH:00" in Europe/Stockholm. */
@@ -31,9 +32,17 @@ export async function fetchTodayHourly(
   if (cached && now - cached.at < CACHE_TTL_MS) return cached.data;
 
   try {
-    const res = await fetch(`${NORDAPI_BASE}/electricity/today/${zone}`, {
-      cache: "no-store",
-    });
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    let res: Response;
+    try {
+      res = await fetch(`${NORDAPI_BASE}/electricity/today/${zone}`, {
+        cache: "no-store",
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(id);
+    }
     if (!res.ok) {
       cache.set(zone, { at: now, data: null });
       return null;
