@@ -20,6 +20,7 @@ export interface Database {
           price_unit: string;
           notify_tips: boolean;
           notify_weekly: boolean;
+          notify_tasks: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -33,6 +34,7 @@ export interface Database {
           price_unit?: string;
           notify_tips?: boolean;
           notify_weekly?: boolean;
+          notify_tasks?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -46,6 +48,7 @@ export interface Database {
           price_unit?: string;
           notify_tips?: boolean;
           notify_weekly?: boolean;
+          notify_tasks?: boolean;
           created_at?: string;
           updated_at?: string;
         };

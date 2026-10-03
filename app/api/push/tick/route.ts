@@ -1,8 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { fetchTodayHourly } from "@/lib/api/today";
-import { adminClient, recipientsFor } from "@/lib/push/audience";
+import {
+  adminClient,
+  openTasksByUser,
+  recipientsFor,
+  type Recipient,
+} from "@/lib/push/audience";
 import { sendPush, type PushMessage } from "@/lib/push/expo";
+import { windowAlert } from "@/lib/push/messages";
 import { bestContiguousWindow, hourLabel } from "@/lib/windows";
 import type { ZoneCode } from "@/types";
 
@@ -14,8 +20,12 @@ import type { ZoneCode } from "@/types";
  * without touching the sending logic.
  *
  *   every run        cheapest-window alert, but only when that window is about
- *                    to start (so it stays silent on an hourly schedule)
- *   07:00 Stockholm  morning digest: today's cheapest window
+ *                    to start (so it stays silent on an hourly schedule). For
+ *                    someone who also turned on "Påminnelser" the same alert
+ *                    names a task they still have open, so the two switches
+ *                    never produce two notifications about one window.
+ *   07:00 Stockholm  morning digest: today's cheapest window, and how many
+ *                    tasks are still waiting
  *   Sun 18:00        weekly summary of completed tasks and savings
  *
  * Vercel's free plan allows only a daily cron, so the default schedule is the
@@ -75,21 +85,28 @@ export async function GET(request: NextRequest) {
   const startingSoon = hourLabel((hour + 1) % 24);
   const isMorningDigest = hour === 7 && minute < 60;
 
-  const recipients = await recipientsFor("notify_tips");
+  const recipients = await recipientsFor("notify_tips", "notify_tasks");
   if (recipients.length > 0) {
-    const byZone = new Map<ZoneCode, string[]>();
+    // Only the users who asked for reminders need their task list read.
+    const openTasks = await openTasksByUser(
+      recipients
+        .filter((recipient) => recipient.prefs.notify_tasks)
+        .map((recipient) => recipient.userId)
+    );
+
+    const byZone = new Map<ZoneCode, Recipient[]>();
     for (const recipient of recipients) {
       byZone.set(recipient.zone, [
         ...(byZone.get(recipient.zone) ?? []),
-        ...recipient.tokens,
+        recipient,
       ]);
     }
 
     const messages: PushMessage[] = [];
 
     for (const zone of ZONES) {
-      const tokens = byZone.get(zone);
-      if (!tokens || tokens.length === 0) continue;
+      const zoneRecipients = byZone.get(zone);
+      if (!zoneRecipients || zoneRecipients.length === 0) continue;
 
       const hours = await fetchTodayHourly(zone);
       if (!hours || hours.length === 0) continue;
@@ -102,24 +119,38 @@ export async function GET(request: NextRequest) {
       const timely = window.start === startingSoon;
       if (!timely && !isMorningDigest) continue;
 
-      const body = timely
-        ? `Elen är som billigast ${window.start}–${window.end} (snitt ${window.avg.toFixed(0)} öre/kWh). Bra läge för diskmaskinen eller laddning.`
-        : `Idag är elen billigast ${window.start}–${window.end}, snitt ${window.avg.toFixed(0)} öre/kWh.`;
-
-      for (const token of tokens) {
-        messages.push({
-          to: token,
-          title: timely ? "Billigaste timmarna börjar snart" : "Dagens billigaste timmar",
-          body,
-          channelId: CHANNEL_ID,
-          data: { kind: "price-window", zone, start: window.start, end: window.end },
+      for (const recipient of zoneRecipients) {
+        const copy = windowAlert({
+          timely,
+          start: window.start,
+          end: window.end,
+          avg: window.avg,
+          wantsPrice: recipient.prefs.notify_tips,
+          openTasks: openTasks.get(recipient.userId) ?? [],
         });
+        // Null for someone who only wants reminders and has nothing left to do.
+        if (!copy) continue;
+
+        for (const token of recipient.tokens) {
+          messages.push({
+            to: token,
+            title: copy.title,
+            body: copy.body,
+            channelId: CHANNEL_ID,
+            data: {
+              kind: recipient.prefs.notify_tips ? "price-window" : "task-reminder",
+              zone,
+              start: window.start,
+              end: window.end,
+            },
+          });
+        }
       }
     }
 
     if (messages.length > 0) {
       const outcome = await sendPush(messages);
-      actions.push(`price: sent ${outcome.sent}, failed ${outcome.failed}`);
+      actions.push(`window: sent ${outcome.sent}, failed ${outcome.failed}`);
     }
   }
 
