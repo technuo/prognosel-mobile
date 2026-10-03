@@ -20,7 +20,7 @@ import type { ZoneCode } from "@/types";
  * without touching the sending logic.
  *
  *   every run        cheapest-window alert, but only when that window is about
- *                    to start (so it stays silent on an hourly schedule). For
+ *                    to start, so an hourly schedule stays quiet until it is. For
  *                    someone who also turned on "Påminnelser" the same alert
  *                    names a task they still have open, so the two switches
  *                    never produce two notifications about one window.
@@ -111,7 +111,12 @@ export async function GET(request: NextRequest) {
       const hours = await fetchTodayHourly(zone);
       if (!hours || hours.length === 0) continue;
 
-      const window = bestContiguousWindow(hours, WINDOW_HOURS);
+      // Only the hours still ahead. The feed carries the whole of today, past
+      // included, so searching all of it can name a window that has already
+      // run — and because the day's cheapest window is often an early-morning
+      // one, `startingSoon` below would rarely have anything left to match.
+      const ahead = hours.filter((point) => point.hour >= hourLabel(hour));
+      const window = bestContiguousWindow(ahead, WINDOW_HOURS);
       if (!window) continue;
 
       // On an hourly schedule this only fires when the window is next; on the
@@ -199,6 +204,15 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     ok: true,
     stockholm: `${weekday} ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+    // Counts, so a manual run says whether the audience was found at all
+    // rather than leaving an empty `actions` to be interpreted.
+    audience: {
+      recipients: recipients.length,
+      devices: recipients.reduce(
+        (total, recipient) => total + recipient.tokens.length,
+        0
+      ),
+    },
     actions,
   });
 }
