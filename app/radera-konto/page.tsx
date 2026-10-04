@@ -87,7 +87,11 @@ export default function RaderaKontoPage() {
           <li>Din profil och ditt valda elområde</li>
           <li>Dina uppgifter, inklusive din dagars serie</li>
           <li>Din chatt med Sparky</li>
-          <li>Anonymiserad användningsstatistik kopplad till ditt konto</li>
+          <li>Din användningsstatistik kopplad till kontot</li>
+          <li>
+            Enhetstoken för pushnotiser, om du har slagit på notiser i
+            Android-appen
+          </li>
         </ul>
         <p>
           Inga uppgifter behålls efter raderingen, och vi säljer eller delar
