@@ -5,11 +5,11 @@ import { LanguageProvider } from "@/hooks/use-language";
 export const metadata: Metadata = {
   metadataBase: new URL("https://prognosel.energy"),
   title: {
-    default: "PrognosEL – Elpriser Idag & AI-Prognos för SE1–SE4 | Gratis",
+    default: "PrognosEL – Elpriser Idag & AI-Prognos för SE1–SE4",
     template: "%s | PrognosEL",
   },
   description:
-    "Se aktuella elpriser per timme för hela Sverige. AI-driven 24h-prognos för SE1, SE2, SE3 och SE4. Spara pengar med smarta tips och veckoplanerare. Helt gratis.",
+    "Se aktuella elpriser per timme för hela Sverige. AI-driven 24h-prognos för SE1, SE2, SE3 och SE4. Spara pengar med smarta tips och veckoplanerare. Grundfunktionerna är gratis.",
   keywords: [
     "elpriser idag",
     "spotpris el",
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
     url: "https://prognosel.energy",
     siteName: "PrognosEL",
     title: "PrognosEL – Elpriser & AI-Prognos Sverige",
-    description: "Aktuella spotpriser + 24h AI-prognos för SE1–SE4. Gratis.",
+    description: "Aktuella spotpriser + 24h AI-prognos för SE1–SE4. Grundfunktionerna är gratis.",
     images: [
       {
         url: "/og-image.png",

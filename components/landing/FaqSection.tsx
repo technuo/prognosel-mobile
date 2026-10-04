@@ -21,7 +21,7 @@ const faqs = [
   },
   {
     q: "Är PrognosEL gratis att använda?",
-    a: "Ja, PrognosEL är helt gratis. Du kan se realtidspriser för alla fyra elområden utan att logga in. Skapar du ett gratis konto (med Google eller GitHub) får du tillgång till AI-prognosen, veckoplaneraren, Sparky-assistenten och personliga spartips.",
+    a: "Ja – grundfunktionerna är gratis. Du kan se realtidspriser för alla fyra elområden utan att logga in, och med ett konto (Google eller GitHub) får du AI-prognosen, veckoplaneraren, Sparky-assistenten och personliga spartips. Vissa funktioner kan senare bli en betaltjänst.",
   },
 ];
 

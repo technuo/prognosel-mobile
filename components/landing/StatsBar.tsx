@@ -3,7 +3,7 @@ export default function StatsBar() {
     { num: "24h", label: "AI-prognos per zon" },
     { num: "4", label: "Elområden SE1–SE4" },
     { num: "±8%", label: "Genomsnittligt prognosfel" },
-    { num: "0 kr", label: "Alltid gratis" },
+    { num: "0 kr", label: "Gratis grundfunktioner" },
   ];
 
   return (

@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Om PrognosEL – Så fungerar vår elprognos",
   description:
-    "PrognosEL är en gratis webbapp som hjälper svenska hushåll att se när elen är billig – med realtidspriser för SE1–SE4, AI-prognos och smarta spartips.",
+    "PrognosEL hjälper svenska hushåll att se när elen är billig – med realtidspriser för SE1–SE4, AI-prognos och smarta spartips.",
   alternates: {
     canonical: "https://prognosel.energy/om/",
   },
@@ -46,8 +46,8 @@ export default function OmPage() {
 
       <div style={{ color: "#5B554E", fontSize: 16, lineHeight: 1.8 }}>
         <p>
-          PrognosEL är en gratis webbapp som visar svenska hushåll när elen är billig. Sverige är
-          indelat i fyra elområden (SE1–SE4) där priset ändras varje timme – och med ett
+          PrognosEL visar svenska hushåll när elen är billig. Grundfunktionerna är gratis. Sverige
+          är indelat i fyra elområden (SE1–SE4) där priset ändras varje timme – och med ett
           timprisavtal kan skillnaden mellan dyraste och billigaste timmen vara flera kronor per
           kilowattimme.
         </p>
