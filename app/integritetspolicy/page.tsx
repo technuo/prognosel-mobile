@@ -54,14 +54,15 @@ export default function IntegritetspolicyPage() {
         Din integritet
       </h1>
       <p style={{ color: "#8C847C", fontSize: 15, marginBottom: 8 }}>
-        Senast uppdaterad: 2026-08-27
+        Senast uppdaterad: 2026-10-04
       </p>
 
       <div style={body}>
         <p>
           Denna policy beskriver hur PrognosEL behandlar personuppgifter när du använder vår
-          webbapp på prognosel.energy. PrognosEL drivs av en enskild utvecklare och vi strävar efter
-          att samla in så lite data som möjligt – bara det som behövs för att tjänsten ska fungera.
+          webbapp på prognosel.energy och vår Android-app. PrognosEL drivs av en enskild utvecklare
+          och vi strävar efter att samla in så lite data som möjligt – bara det som behövs för att
+          tjänsten ska fungera.
         </p>
 
         <h2 style={sectionTitle}>1. Vilka uppgifter vi samlar in</h2>
@@ -83,9 +84,16 @@ export default function IntegritetspolicyPage() {
             behandlas för att kunna besvara dig.
           </li>
           <li>
-            <strong>Lokal lagring i din webbläsare:</strong> ditt språkval, elområde, uppgifter och
-            chattlogg kan sparas lokalt (localStorage) på din enhet för att tjänsten ska fungera
-            även utan konto.
+            <strong>Pushnotiser (Android, om du slår på dem):</strong> för att kunna skicka notiser
+            sparar vi en enhetstoken – en teknisk adress som notistjänsten använder för att nå just
+            din enhet. Den innehåller ingen information om dig. Vi tar bort den när du loggar ut
+            eller raderar ditt konto; stänger du bara av notiserna slutar vi skicka, men token
+            ligger kvar tills dess.
+          </li>
+          <li>
+            <strong>Lokal lagring på din enhet:</strong> ditt språkval, elområde, uppgifter och
+            chattlogg kan sparas lokalt på enheten – i webbläsarens localStorage på webben och i
+            appens egen lagring i Android-appen – för att tjänsten ska fungera även utan konto.
           </li>
         </ul>
 
@@ -93,8 +101,9 @@ export default function IntegritetspolicyPage() {
         <p>
           Vi behandlar uppgifterna för att tillhandahålla tjänsten: visa rätt elpriser för ditt
           område, ge personliga spartips, synkronisera dina uppgifter mellan enheter när du är
-          inloggad och svara på dina frågor via Sparky. Rättslig grund är ditt samtycke (när du
-          loggar in och använder funktionerna) och vårt berättigade intresse av att driva och
+          inloggad, skicka notiser du bett om och svara på dina frågor via Sparky. Rättslig grund är
+          ditt samtycke (när du loggar in, slår på notiser och använder funktionerna) och vårt
+          berättigade intresse av att driva och
           förbättra tjänsten.
         </p>
 
@@ -110,6 +119,12 @@ export default function IntegritetspolicyPage() {
           Uppgifterna lagras hos vår molnleverantör Supabase samt hos de inloggningstjänster du
           använder (Google/GitHub). Överföring till länder utanför EU/EES sker endast med
           skyddsmekanismer enligt GDPR (t.ex. EU:s standardavtalsklausuler).
+        </p>
+        <p>
+          Pushnotiser levereras via Expós notistjänst och Firebase Cloud Messaging (Google). När en
+          notis skickas får de tjänsterna enhetstoken och notisens text – texten kan innehålla
+          titeln på en av dina uppgifter, till exempel &quot;Kör diskmaskinen&quot; – eftersom det
+          är vad som ska visas på din telefon.
         </p>
 
         <h2 style={sectionTitle}>5. Cookies och lokal lagring</h2>
