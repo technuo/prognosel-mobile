@@ -48,7 +48,7 @@ export default function HeroSection({ prices }: HeroSectionProps) {
       </h1>
 
       <p className="landing-hero-sub">
-        Spotpriser per timme för SE1–SE4, AI-driven 24h-prognos och smarta spartips. Alltid gratis.
+        Spotpriser per timme för SE1–SE4, AI-driven 24h-prognos och smarta spartips. Grundfunktionerna är gratis.
       </p>
 
       <div className="landing-hero-actions">

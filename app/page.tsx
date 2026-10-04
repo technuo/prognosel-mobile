@@ -13,7 +13,7 @@ import { fetchAllZonesPrices } from "@/lib/api/prices-server";
 export const metadata: Metadata = {
   title: "PrognosEL – Elpriser Idag & AI-Prognos för SE1–SE4",
   description:
-    "Se aktuella elpriser per timme för hela Sverige. AI-driven 24h-prognos för SE1, SE2, SE3 och SE4. Spara pengar med smarta tips. Helt gratis.",
+    "Se aktuella elpriser per timme för hela Sverige. AI-driven 24h-prognos för SE1, SE2, SE3 och SE4. Spara pengar med smarta tips. Grundfunktionerna är gratis.",
   alternates: {
     canonical: "https://prognosel.energy",
   },

@@ -5,7 +5,7 @@ export default function CtaSection() {
       <h2 className="landing-cta-title" id="cta-heading">
         Vet alltid när<br /><em>elen är billig</em>
       </h2>
-      <p className="landing-cta-sub">Gratis · Ingen kreditkort · Redo på 30 sekunder</p>
+      <p className="landing-cta-sub">Gratis att börja · Inget kreditkort · Redo på 30 sekunder</p>
       <a href="/login" className="landing-btn-light">Skapa gratis konto</a>
     </section>
   );

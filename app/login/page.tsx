@@ -93,8 +93,8 @@ export default function LoginPage() {
 
             <p className="text-[11px] text-faint text-center mt-4 leading-relaxed">
               {lang === "sv"
-                ? "Gratis · dina uppgifter och din serie sparas i ditt konto och synkas mellan enheter"
-                : "Free · your tasks and streak are stored in your account and sync across devices"}
+                ? "Gratis grundfunktioner · dina uppgifter och din serie sparas i ditt konto och synkas mellan enheter"
+                : "Free basics · your tasks and streak are stored in your account and sync across devices"}
             </p>
           </div>
         </div>

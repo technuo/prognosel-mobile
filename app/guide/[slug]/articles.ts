@@ -587,7 +587,7 @@ export const articles: ArticleData[] = [
       },
       {
         type: "paragraph",
-        text: "Appen är gratis och kräver inget abonnemang för att se dagens priser. Skapar du ett konto får du dessutom personliga spartips baserade på ditt elområde och dina vanor.",
+        text: "Grundfunktionerna är gratis och du behöver inget abonnemang för att se dagens priser. Skapar du ett konto får du dessutom personliga spartips baserade på ditt elområde och dina vanor.",
       },
       {
         type: "link",
