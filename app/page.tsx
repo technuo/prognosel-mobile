@@ -3,6 +3,7 @@ import "./landing.css";
 import { JsonLd } from "@/components/landing/JsonLd";
 import HeroSection from "@/components/landing/HeroSection";
 import StatsBar from "@/components/landing/StatsBar";
+import BetaSignup from "@/components/landing/BetaSignup";
 import FeaturesGrid from "@/components/landing/FeaturesGrid";
 import ZonesSection from "@/components/landing/ZonesSection";
 import HowItWorks from "@/components/landing/HowItWorks";
@@ -65,6 +66,7 @@ export default async function LandingPage() {
       <main>
         <HeroSection prices={prices} />
         <StatsBar />
+        <BetaSignup />
         <FeaturesGrid />
         <ZonesSection prices={prices} />
         <HowItWorks />
