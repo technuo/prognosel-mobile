@@ -91,6 +91,12 @@ export default function IntegritetspolicyPage() {
             ligger kvar tills dess.
           </li>
           <li>
+            <strong>E-postadress för testinbjudan:</strong> anmäler du intresse för den slutna
+            testningen på vår startsida sparar vi din adress för att kunna lägga till dig som testare
+            och skicka installationslänken. Adressen används inte för något annat, och du kan be oss
+            ta bort den när som helst.
+          </li>
+          <li>
             <strong>Lokal lagring på din enhet:</strong> ditt språkval, elområde, uppgifter och
             chattlogg kan sparas lokalt på enheten – i webbläsarens localStorage på webben och i
             appens egen lagring i Android-appen – för att tjänsten ska fungera även utan konto.
