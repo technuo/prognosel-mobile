@@ -12,6 +12,10 @@
 -- key means another run already took it. The same mechanism keeps the weekly
 -- summary to one per week if an hourly scheduler is added later.
 --
+-- The key names the period, not the job: `morning_digest:2026-10-07`. A bare
+-- `morning_digest` key would be claimed on the first morning and then collide
+-- forever, which is a digest that arrives exactly once.
+--
 -- The route also keeps a `last_run` row here, overwritten on every invocation with
 -- that run's Stockholm time and what it decided. Without it, "the digest did not
 -- arrive" and "the scheduler never fired" are the same observation.
@@ -31,6 +35,9 @@ alter table public.push_state enable row level security;
 
 -- Verification after applying:
 --   select key, value, updated_at from public.push_state order by updated_at desc;
---   -- after the first morning run: one row, key = 'morning_digest',
---   -- value = that day's date in Stockholm (YYYY-MM-DD)
---   -- and one row, key = 'last_run', value = '<date> HH:MM | digest: sent 1, failed 0'
+--   -- after the first morning run: key = 'morning_digest:YYYY-MM-DD',
+--   -- value = 'sent from the HH:MM run'
+--   -- plus key = 'last_run', value = '<date> HH:MM | digest: sent 1, failed 0'
+--
+-- Claim rows accumulate one per day (365 a year, which is not worth pruning) and
+-- are kept for exactly that reason: they are the record of which mornings sent.

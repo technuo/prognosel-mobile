@@ -8,6 +8,7 @@ import {
   type Recipient,
 } from "@/lib/push/audience";
 import { sendPush, type PushMessage } from "@/lib/push/expo";
+import { claimKey } from "@/lib/push/claims";
 import { windowAlert } from "@/lib/push/messages";
 import { stockholmDateKey } from "@/lib/streak";
 import { bestContiguousWindow, hourLabel } from "@/lib/windows";
@@ -84,6 +85,10 @@ type Claim = "claimed" | "taken" | "no-guard";
  * run in the morning" mean at most one digest per day even though the platform
  * decides *when* that run happens, and it also absorbs a retried invocation.
  *
+ * The key has to name the period being claimed — `morning_digest:2026-10-07`, not
+ * `morning_digest`. A key that never changes is claimed once and then never again,
+ * which is a digest that arrives exactly one morning out of the year.
+ *
  * A missing table (Postgres 42P01 — the migration has not been applied) returns
  * `no-guard` and the caller sends anyway. Degrading to the daily schedule, which
  * already runs once, still produces one digest a day; staying silent would make a
@@ -124,6 +129,7 @@ export async function GET(request: NextRequest) {
   }
 
   const now = new Date();
+  const today = stockholmDateKey(now);
   const { hour, minute, weekday } = stockholm(now);
   const actions: string[] = [];
 
@@ -214,7 +220,11 @@ export async function GET(request: NextRequest) {
     }
 
     if (digestMessages.length > 0) {
-      const claim = await claimOnce("morning_digest", stockholmDateKey(now));
+      // Scoped to the day, so tomorrow's first run claims a slot of its own.
+      const claim = await claimOnce(
+        claimKey("morning_digest", today),
+        `sent from the ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")} run`
+      );
       if (claim === "taken") {
         actions.push("digest: already sent today, skipped");
       } else {
@@ -267,7 +277,11 @@ export async function GET(request: NextRequest) {
       }
 
       if (messages.length > 0) {
-        const claim = await claimOnce("weekly_summary", stockholmDateKey(now));
+        // The Sunday date names the week, since this only runs on a Sunday.
+        const claim = await claimOnce(
+          claimKey("weekly_summary", today),
+          `sent from the ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")} run`
+        );
         if (claim === "taken") {
           actions.push("weekly: already sent this week, skipped");
         } else {
@@ -303,7 +317,7 @@ export async function GET(request: NextRequest) {
   // that has already sent, or should have.
   const recorder = adminClient();
   if (recorder) {
-    const stamp = `${stockholmDateKey(now)} ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+    const stamp = `${today} ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
     await recorder
       .from("push_state")
       .upsert(
