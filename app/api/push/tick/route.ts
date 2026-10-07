@@ -8,7 +8,7 @@ import {
   type Recipient,
 } from "@/lib/push/audience";
 import { sendPush, type PushMessage } from "@/lib/push/expo";
-import { claimKey } from "@/lib/push/claims";
+import { claimKey, maySendUnguardedDigest } from "@/lib/push/claims";
 import { windowAlert } from "@/lib/push/messages";
 import { stockholmDateKey } from "@/lib/streak";
 import { bestContiguousWindow, hourLabel } from "@/lib/windows";
@@ -47,6 +47,9 @@ import type { ZoneCode } from "@/types";
 
 const ZONES: ZoneCode[] = ["SE1", "SE2", "SE3", "SE4"];
 const WINDOW_HOURS = 3;
+/** Stockholm hours the morning digest may go out in: [MORNING_START, MORNING_END). */
+const MORNING_START = 5;
+const MORNING_END = 12;
 /** Matches the channel the app creates, or Android shows nothing. */
 const CHANNEL_ID = "prognosel-alerts";
 
@@ -131,15 +134,17 @@ export async function GET(request: NextRequest) {
   const now = new Date();
   const today = stockholmDateKey(now);
   const { hour, minute, weekday } = stockholm(now);
+  /** "HH:MM" in Stockholm, for anything that has to name the run it was. */
+  const stamp = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
   const actions: string[] = [];
 
   // ── cheapest window, either "starting soon" or the morning digest ─────────
   const startingSoon = hourLabel((hour + 1) % 24);
-  // "Morning", not "the 07 hour". The scheduler only promises hour precision, so
-  // testing for an exact hour turns a late invocation into a silent no-op —
-  // indistinguishable from "there was nothing to send". claimOnce below is what
-  // keeps the digest to one a day.
-  const isMorning = hour >= 5 && hour < 12;
+  // "Morning", not "the 07 hour". A scheduler that only promises hour precision
+  // turns an exact-hour test into a silent no-op — indistinguishable from "there
+  // was nothing to send". The claim keeps it to one a day; MORNING_START is also
+  // what bounds the unguarded fallback below.
+  const isMorning = hour >= MORNING_START && hour < MORNING_END;
 
   const recipients = await recipientsFor("notify_tips", "notify_tasks");
   if (recipients.length > 0) {
@@ -223,10 +228,24 @@ export async function GET(request: NextRequest) {
       // Scoped to the day, so tomorrow's first run claims a slot of its own.
       const claim = await claimOnce(
         claimKey("morning_digest", today),
-        `sent from the ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")} run`
+        `sent from the ${stamp} run`
       );
+
       if (claim === "taken") {
         actions.push("digest: already sent today, skipped");
+      } else if (
+        claim === "no-guard" &&
+        !maySendUnguardedDigest(hour, MORNING_START)
+      ) {
+        // No claim and not the first morning hour: sending would repeat the digest
+        // on every remaining morning run. Held back rather than duplicated, and
+        // said out loud rather than left to look like "nothing to send".
+        console.error(
+          `[push] no once-a-day guard at ${stamp}; digest held back until ${MORNING_START}:00`
+        );
+        actions.push(
+          `digest: held back at ${stamp} — no once-a-day guard, will retry at ${MORNING_START}:00`
+        );
       } else {
         const outcome = await sendPush(digestMessages);
         actions.push(
@@ -280,10 +299,23 @@ export async function GET(request: NextRequest) {
         // The Sunday date names the week, since this only runs on a Sunday.
         const claim = await claimOnce(
           claimKey("weekly_summary", today),
-          `sent from the ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")} run`
+          `sent from the ${stamp} run`
         );
+
         if (claim === "taken") {
           actions.push("weekly: already sent this week, skipped");
+        } else if (
+          claim === "no-guard" &&
+          !maySendUnguardedDigest(hour, MORNING_START)
+        ) {
+          // Same reasoning as the digest, and it matters more: on an hourly
+          // schedule a Sunday has 24 runs, not 7.
+          console.error(
+            `[push] no once-a-week guard at ${stamp}; weekly summary held back until ${MORNING_START}:00`
+          );
+          actions.push(
+            `weekly: held back at ${stamp} — no once-a-week guard, will retry at ${MORNING_START}:00`
+          );
         } else {
           const outcome = await sendPush(messages);
           actions.push(
@@ -297,7 +329,7 @@ export async function GET(request: NextRequest) {
 
   const summary = {
     ok: true,
-    stockholm: `${weekday} ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
+    stockholm: `${weekday} ${stamp}`,
     // Counts, so a manual run says whether the audience was found at all
     // rather than leaving an empty `actions` to be interpreted.
     audience: {
@@ -317,11 +349,13 @@ export async function GET(request: NextRequest) {
   // that has already sent, or should have.
   const recorder = adminClient();
   if (recorder) {
-    const stamp = `${today} ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
     await recorder
       .from("push_state")
       .upsert(
-        { key: "last_run", value: `${stamp} | ${actions.join(" | ") || "no action"}` },
+        {
+          key: "last_run",
+          value: `${today} ${stamp} | ${actions.join(" | ") || "no action"}`,
+        },
         { onConflict: "key" }
       );
   }
