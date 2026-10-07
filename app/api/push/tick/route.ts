@@ -9,6 +9,7 @@ import {
 } from "@/lib/push/audience";
 import { sendPush, type PushMessage } from "@/lib/push/expo";
 import { windowAlert } from "@/lib/push/messages";
+import { stockholmDateKey } from "@/lib/streak";
 import { bestContiguousWindow, hourLabel } from "@/lib/windows";
 import type { ZoneCode } from "@/types";
 
@@ -24,9 +25,18 @@ import type { ZoneCode } from "@/types";
  *                    someone who also turned on "Påminnelser" the same alert
  *                    names a task they still have open, so the two switches
  *                    never produce two notifications about one window.
- *   07:00 Stockholm  morning digest: today's cheapest window, and how many
- *                    tasks are still waiting
- *   Sun 18:00        weekly summary of completed tasks and savings
+ *   first morning run  digest: today's cheapest window, and how many tasks are
+ *                    still waiting. Not "the 07:00 run": the scheduler promises
+ *                    hour precision at best, and a digest that silently depends on
+ *                    landing inside one specific hour is a digest that silently
+ *                    does not arrive. It is claimed once per day instead.
+ *   first Sunday run  weekly summary of completed tasks and savings
+ *
+ * Both the daily and the weekly message claim a slot in `push_state` before they
+ * send, which is what bounds them when the schedule is coarse — or when an hourly
+ * scheduler is pointed at this same URL later. Every run also writes what it did
+ * to `push_state` under `last_run`, so a silent morning can be told apart from a
+ * schedule that never fired.
  *
  * Vercel's free plan allows only a daily cron, so the default schedule is the
  * morning digest. Pointing an hourly scheduler (Supabase pg_cron, or a GitHub
@@ -57,6 +67,42 @@ function stockholm(date: Date) {
   };
 }
 
+/**
+ * How a one-shot claim turned out.
+ *
+ *   claimed  this run took the slot, so it is the one that sends
+ *   taken    another run already took it; stay quiet
+ *   no-guard the claim could not be made at all — see below
+ */
+type Claim = "claimed" | "taken" | "no-guard";
+
+/**
+ * Claims a one-shot slot.
+ *
+ * The insert is the claim: `push_state.key` is the primary key, so a duplicate-key
+ * error means another invocation already sent this. That is what makes "the first
+ * run in the morning" mean at most one digest per day even though the platform
+ * decides *when* that run happens, and it also absorbs a retried invocation.
+ *
+ * A missing table (Postgres 42P01 — the migration has not been applied) returns
+ * `no-guard` and the caller sends anyway. Degrading to the daily schedule, which
+ * already runs once, still produces one digest a day; staying silent would make a
+ * forgotten migration look exactly like a scheduler that never fired, which is
+ * the bug this whole change exists to remove. The caller labels the outcome so it
+ * shows up in `actions` and in the `last_run` row.
+ */
+async function claimOnce(key: string, value: string): Promise<Claim> {
+  const admin = adminClient();
+  if (!admin) return "no-guard";
+
+  const { error } = await admin.from("push_state").insert({ key, value });
+  if (!error) return "claimed";
+  if (error.code === "23505") return "taken";
+
+  console.error(`[push] could not claim ${key}: ${error.code} ${error.message}`);
+  return "no-guard";
+}
+
 export async function GET(request: NextRequest) {
   // Vercel adds this header automatically when CRON_SECRET is set.
   const secret = process.env.CRON_SECRET;
@@ -83,7 +129,11 @@ export async function GET(request: NextRequest) {
 
   // ── cheapest window, either "starting soon" or the morning digest ─────────
   const startingSoon = hourLabel((hour + 1) % 24);
-  const isMorningDigest = hour === 7 && minute < 60;
+  // "Morning", not "the 07 hour". The scheduler only promises hour precision, so
+  // testing for an exact hour turns a late invocation into a silent no-op —
+  // indistinguishable from "there was nothing to send". claimOnce below is what
+  // keeps the digest to one a day.
+  const isMorning = hour >= 5 && hour < 12;
 
   const recipients = await recipientsFor("notify_tips", "notify_tasks");
   if (recipients.length > 0) {
@@ -102,7 +152,11 @@ export async function GET(request: NextRequest) {
       ]);
     }
 
-    const messages: PushMessage[] = [];
+    // Split rather than one list: they are sent under different rules. "The window
+    // starts next hour" is only true right now, so it goes out immediately; the
+    // digest is claimed once per day first.
+    const timelyMessages: PushMessage[] = [];
+    const digestMessages: PushMessage[] = [];
 
     for (const zone of ZONES) {
       const zoneRecipients = byZone.get(zone);
@@ -122,7 +176,8 @@ export async function GET(request: NextRequest) {
       // On an hourly schedule this only fires when the window is next; on the
       // daily schedule it fires once in the morning and stays quiet otherwise.
       const timely = window.start === startingSoon;
-      if (!timely && !isMorningDigest) continue;
+      if (!timely && !isMorning) continue;
+      const target = timely ? timelyMessages : digestMessages;
 
       for (const recipient of zoneRecipients) {
         const copy = windowAlert({
@@ -137,7 +192,7 @@ export async function GET(request: NextRequest) {
         if (!copy) continue;
 
         for (const token of recipient.tokens) {
-          messages.push({
+          target.push({
             to: token,
             title: copy.title,
             body: copy.body,
@@ -153,14 +208,31 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    if (messages.length > 0) {
-      const outcome = await sendPush(messages);
+    if (timelyMessages.length > 0) {
+      const outcome = await sendPush(timelyMessages);
       actions.push(`window: sent ${outcome.sent}, failed ${outcome.failed}`);
+    }
+
+    if (digestMessages.length > 0) {
+      const claim = await claimOnce("morning_digest", stockholmDateKey(now));
+      if (claim === "taken") {
+        actions.push("digest: already sent today, skipped");
+      } else {
+        const outcome = await sendPush(digestMessages);
+        actions.push(
+          `digest: sent ${outcome.sent}, failed ${outcome.failed}` +
+            (claim === "no-guard" ? " (unguarded — apply the push_state migration)" : "")
+        );
+      }
     }
   }
 
-  // ── weekly summary, Sunday evening in Stockholm ───────────────────────────
-  if (weekday === "Sun" && hour === 18) {
+  // ── weekly summary, Sunday ────────────────────────────────────────────────
+  //
+  // This used to require `hour === 18`, which the daily 05:00 UTC schedule can
+  // never satisfy — so it never ran at all. It now goes out with the first Sunday
+  // run, and the claim keeps it to one a week if an hourly scheduler is added.
+  if (weekday === "Sun") {
     const weekly = await recipientsFor("notify_weekly");
     if (weekly.length > 0) {
       const admin = adminClient()!;
@@ -195,13 +267,21 @@ export async function GET(request: NextRequest) {
       }
 
       if (messages.length > 0) {
-        const outcome = await sendPush(messages);
-        actions.push(`weekly: sent ${outcome.sent}, failed ${outcome.failed}`);
+        const claim = await claimOnce("weekly_summary", stockholmDateKey(now));
+        if (claim === "taken") {
+          actions.push("weekly: already sent this week, skipped");
+        } else {
+          const outcome = await sendPush(messages);
+          actions.push(
+            `weekly: sent ${outcome.sent}, failed ${outcome.failed}` +
+              (claim === "no-guard" ? " (unguarded — apply the push_state migration)" : "")
+          );
+        }
       }
     }
   }
 
-  return NextResponse.json({
+  const summary = {
     ok: true,
     stockholm: `${weekday} ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`,
     // Counts, so a manual run says whether the audience was found at all
@@ -214,5 +294,23 @@ export async function GET(request: NextRequest) {
       ),
     },
     actions,
-  });
+  };
+
+  // A record of the last run, kept in the app's own database so that "did the
+  // scheduler even fire?" is one SQL query instead of a trip to the dashboard's
+  // log viewer — the question this endpoint just cost a morning to answer.
+  // Writing it is best-effort: a missing table or a failed write never fails a run
+  // that has already sent, or should have.
+  const recorder = adminClient();
+  if (recorder) {
+    const stamp = `${stockholmDateKey(now)} ${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+    await recorder
+      .from("push_state")
+      .upsert(
+        { key: "last_run", value: `${stamp} | ${actions.join(" | ") || "no action"}` },
+        { onConflict: "key" }
+      );
+  }
+
+  return NextResponse.json(summary);
 }
