@@ -157,84 +157,91 @@ export const articles: ArticleData[] = [
     slug: "elpriser-2025",
     title: "Varför är elpriset högt just nu?",
     description:
-      "En analys av faktorerna bakom dagens höga elpriser i Sverige: väder, vind, kärnkraft, europeiska marknader och geopolitik. Förstå vad som driver priserna och vad du kan göra åt det.",
-    keywords: ["elpriser höga", "varför dyrt el", "elpris 2025", "dyra elpriser sverige", "elchock"],
+      "Varför är elpriset högt just nu? Vi förklarar de fem viktigaste drivkrafterna – väder, kärnkraft, Europa och utsläppsrätter – och visar hur du flyttar förbrukningen till billigare timmar.",
+    keywords: ["varför är elpriset högt just nu", "varför är elpriset så högt just nu", "höga elpriser sverige", "vad driver elpriset upp", "elpris 2026"],
     category: "Aktuellt",
     readTime: "7 min",
     published: "2025-06-02",
-    updated: "2025-06-02",
+    updated: "2026-10-07",
     toc: [
-      { id: "laget-just-nu", text: "Läget just nu", level: 2 },
-      { id: "huvuddrivkrafter-bakom-hoga-priser", text: "Huvuddrivkrafter bakom höga priser", level: 2 },
-      { id: "skillnad-mellan-elomraden", text: "Skillnad mellan elområden", level: 2 },
+      { id: "svaret-i-korthet", text: "Svaret i korthet", level: 2 },
+      { id: "de-viktigaste-drivkrafterna", text: "De viktigaste drivkrafterna", level: 2 },
+      { id: "varfor-skiljer-sig-elomradena-at", text: "Varför skiljer sig elområdena åt?", level: 2 },
       { id: "vad-kan-du-gora-at-det", text: "Vad kan du göra åt det?", level: 2 },
-      { id: "prognos-nar-blir-det-battre", text: "Prognos: När blir det bättre?", level: 2 },
+      { id: "nar-sjunker-priserna", text: "När sjunker priserna?", level: 2 },
     ],
     content: [
       {
         type: "paragraph",
-        text: "Elpriserna i Sverige har varit ovanligt höga under stora delar av 2025. Många hushåll undrar varför räkningen är så mycket högre än förra året, och om det kommer att fortsätta. I den här artikeln går vi igenom de viktigaste faktorerna bakom prisuppgången och ger konkreta råd för hur du kan hantera situationen.",
+        text: "Elpriset är högt just nu av flera samverkande orsaker: låg vattenkraftproduktion, planerade och oplanerade kärnkraftsavställningar, hög efterfrågan från Europa och ett högt koldioxidpris. Södra Sverige (SE4) drabbas hårdast, medan norra Sverige (SE1) oftast ligger långt under riksgenomsnittet. Du kan inte ändra marknaden – men du kan flytta din förbrukning till de billigaste timmarna med hjälp av vår timprognos.",
       },
-      { type: "heading", text: "Läget just nu", level: 2 },
+      { type: "heading", text: "Svaret i korthet", level: 2 },
       {
         type: "paragraph",
-        text: "Under våren 2025 har spotpriserna i Sverige legat betydligt över historiska medelvärden. I SE4 (södra Sverige) har timpriserna regelbundet överstigit 100 öre/kWh under höglasttimmar, medan SE1 (norra Sverige) sett priser på 40–60 öre/kWh. Prisskillnaden mellan norr och söder är alltså fortsatt stor.",
-      },
-      {
-        type: "paragraph",
-        text: "Detta är en fortsättning på den trend vi såg under energikrisen 2021–2022, men drivkrafterna har delvis förändrats. Låt oss titta närmare på varför.",
-      },
-      { type: "heading", text: "Huvuddrivkrafter bakom höga priser", level: 2 },
-      {
-        type: "paragraph",
-        text: "Flera faktorer samverkar för att pressa upp elpriserna just nu:",
-      },
-      {
-        type: "list",
-        items: [
-          "Låga vattennivåer i magasinen: Efter en torr vinter är vattennivåerna i de norska och svenska vattenkraftsmagasin lägre än normalt. Vattenkraft står för cirka 45% av Sveriges elproduktion, så när den minskar påverkas priserna kraftigt.",
-          "Begränsad kärnkraft: Ringhals 4 och Oskarshamn 3 har haft planerade avställningar för underhåll under våren. Varje reaktor som står stilla minskar utbudet med cirka 1 000–1 400 MW.",
-          "Ökad europeisk efterfrågan: Den ekonomiska återhämtningen i Europa har lett till ökad industriell efterfrågan på el. Samtidigt har Tyskland stängt flera kärnkraftsreaktorer, vilket ökar deras importbehov och påverkar priserna i hela Europa.",
-          "Koldioxidpriset: Priset på utsläppsrätter (EUA) har legat på historiskt höga nivåer runt 80–100 EUR/ton. Detta gör fossilbaserad elproduktion dyrare och indirekt höjer priserna på hela marknaden.",
-          "Kabelbegränsningar: Bristande överföringskapacitet mellan Sverige och Europa, och mellan norra och södra Sverige, gör att priserna i söder drivs upp av europeisk efterfrågan utan att norrländsk vattenkraft kan kompensera fullt ut.",
-        ],
-      },
-      { type: "heading", text: "Skillnad mellan elområden", level: 2 },
-      {
-        type: "paragraph",
-        text: "Prisskillnaden mellan Sveriges fyra elområden är ett av de tydligaste tecknen på att elsystemet är under press:",
-      },
-      {
-        type: "list",
-        items: [
-          "SE1 (Norrland): Har fortsatt tillgång på riklig vattenkraft och låg befolkningsdensitet. Priserna ligger 30–50% under riksgenomsnittet.",
-          "SE2 (Norra Mellansverige): Påverkas mer av industriell förbrukning. Priserna ligger närmare genomsnittet men fortfarande under södra Sverige.",
-          "SE3 (Södra Mellansverige): Med Stockholm som centrum har högst förbrukning. Priserna är 20–40% högre än i norr.",
-          "SE4 (Södra Sverige): Påverkas kraftigast av europeiska priser och importberoende. Priserna kan vara 2–3 gånger högre än i SE1.",
-        ],
-      },
-      {
-        type: "highlight",
-        text: "Förstå varför priset i SE4 (Malmö) skiljer sig från SE1 (Luleå). Se vår interaktiva zongrafik för realtidspriser i alla fyra områden.",
+        text: "Kortfattat: när det blåser lite, vattenmagasinen är låga eller flera reaktorer står stilla samtidigt, minskar utbudet – och priset går upp. Eftersom Sveriges elmarknad är sammankopplad med Europa följer priserna dessutom med när grannländerna betalar mer. Vill du se exakt vad priset ligger på i ditt område just nu, kolla våra realtidspriser i stället för att gissa.",
       },
       {
         type: "link",
         href: "/elpriser",
-        label: "Se aktuella priser per elområde →",
+        label: "Se dagens elpriser för alla elområden →",
       },
-      { type: "heading", text: "Vad kan du göra åt det?", level: 2 },
+      { type: "heading", text: "De viktigaste drivkrafterna", level: 2 },
       {
         type: "paragraph",
-        text: "Du kan inte påverka de stora makroekonomiska faktorerna, men du kan påverka din egen elkostnad. Här är strategier som fungerar oavsett prisnivå:",
+        text: "Priset sätts av den dyraste produktionen som behövs för att täcka förbrukningen. De här faktorerna bestämmer hur högt det blir:",
       },
       {
         type: "list",
         items: [
-          "Byt till timprisavtal om du inte redan har det. Fastprisavtal är ofta dyrare när spotpriserna är höga, eftersom elhandlaren tar en riskpremie.",
-          "Flytta förbrukning till natten. Även under dyra perioder är natten billigare. Skillnaden mellan dyraste och billigaste timmen kan vara 50–100%.",
-          "Investera i energieffektivisering. Bättre isolering, värmepump och LED-belysning minskar din totala förbrukning – och därmed din sårbarhet för prisuppgångar.",
-          "Överväg solceller. Med höga elpriser är återbetalningstiden för solceller betydligt kortare. Egen solel är dessutom skattefritt upp till 255 kWh/år.",
-          "Använd en elprognos. Med PrognosEL kan du se 24 timmar i förväg vilka timmar som blir dyrast och billigast, och planera dina aktiviteter därefter.",
+          "Vattenkraft: Ungefär 40–45% av Sveriges el kommer från vattenkraft. Låga vattennivåer efter torra perioder sänker produktionen och pressar upp priset, särskilt under vinterhalvåret.",
+          "Kärnkraft: Varje reaktor som är avställd för underhåll eller reparation minskar utbudet med omkring 1 000–1 400 MW. Fler samtidiga avställningar syns direkt i priset.",
+          "Vind: När det blåser mycket sjunker priserna snabbt, och tvärtom. Vindkraften har gjort elpriset mer väderberoende än tidigare.",
+          "Europa: Den svenska elmarknaden är sammankopplad med kontinenten. Hög efterfrågan eller brist på el i Tyskland och övriga Europa drar upp priserna även i Sverige.",
+          "Utsläppsrätter och bränsle: Priset på utsläppsrätter (EUA) och på gas påverkar den dyraste elproduktionen, som i sin tur sätter priset för hela marknaden.",
+          "Överföringskapacitet: När billig nordisk el inte kan flyttas söderut på grund av begränsade ledningar, uppstår stora prisskillnader mellan norr och söder.",
+        ],
+      },
+      { type: "heading", text: "Varför skiljer sig elområdena åt?", level: 2 },
+      {
+        type: "paragraph",
+        text: "Sverige är uppdelat i fyra elområden, och priset kan skilja sig kraftigt mellan dem samma timme:",
+      },
+      {
+        type: "list",
+        items: [
+          "SE1 (Norrland): Riklig vattenkraft och låg förbrukning ger oftast de lägsta priserna.",
+          "SE2 (Norra Mellansverige): Ligger närmare riksgenomsnittet och påverkas av industriell förbrukning.",
+          "SE3 (Södra Mellansverige): Stockholm och hög befolkningstäthet driver upp priset jämfört med norr.",
+          "SE4 (Södra Sverige): Mest kopplat till Europa och störst importberoende – här blir priserna oftast högst.",
+        ],
+      },
+      {
+        type: "highlight",
+        text: "Prisskillnaden mellan SE4 (Malmö) och SE1 (Luleå) kan vara 2–3 gånger under höglasttimmar. Se ditt eget område i realtid.",
+      },
+      {
+        type: "link",
+        href: "/elpriser/se4",
+        label: "Se priset i SE4 (Malmö) →",
+      },
+      {
+        type: "link",
+        href: "/elpriser/se3",
+        label: "Se priset i SE3 (Stockholm) →",
+      },
+      { type: "heading", text: "Vad kan du göra åt det?", level: 2 },
+      {
+        type: "paragraph",
+        text: "Du kan inte påverka marknaden, men du kan påverka din egen elkostnad. Det här fungerar oavsett prisnivå:",
+      },
+      {
+        type: "list",
+        items: [
+          "Byt till timprisavtal (spotpris) om du inte redan har det. Över tid är det ofta billigare än fastpris, särskilt om du kan flytta förbrukning.",
+          "Flytta energitunga sysslor till billiga timmar. Skillnaden mellan dyraste och billigaste timmen kan vara 50–100%.",
+          "Följ timprognosen. Med vår 24h-prognos ser du i förväg vilka timmar som blir dyrast och billigast.",
+          "Effektivisera hemmet. Värmepump, bättre isolering och LED minskar din totala förbrukning och din sårbarhet för prisuppgångar.",
+          "Överväg solceller vid höga elpriser. Återbetalningstiden blir kortare när elen är dyr.",
         ],
       },
       {
@@ -242,23 +249,18 @@ export const articles: ArticleData[] = [
         href: "/prognos",
         label: "Se AI-driven 24h-prognos →",
       },
-      { type: "heading", text: "Prognos: När blir det bättre?", level: 2 },
+      { type: "heading", text: "När sjunker priserna?", level: 2 },
       {
         type: "paragraph",
-        text: "Elpriserna är svåra att förutspå på lång sikt, men det finns några faktorer som talar för en prisnedgång under sommaren och hösten 2025:",
+        text: "Elpriset går upp och ner över dygnet och över året. De billigaste timmarna är nästan alltid natten (02:00–06:00) och ofta mitt på dagen när solen skiner. Säsongsmässigt sjunker priserna oftast under vår och höst, när uppvärmningsbehovet är lägre och vårfloden fyller vattenmagasinen.",
       },
       {
-        type: "list",
-        items: [
-          "Vårflod: När snön smälter i fjällen fylls vattenkraftsmagasin på. Normalt sett leder detta till lägre priser från maj och framåt.",
-          "Ökad vindkraft: Sverige bygger ut vindkraften i snabb takt. Under 2025 väntas 3–4 TWh ny vindkraftsproduktion tas i drift.",
-          "Kärnkraftsåterstart: Ringhals 4 och Forsmark 3 väntas vara tillbaka i drift efter sommaren.",
-          "Mildare väderprognoser: Vädermodellerna pekar på en normal till mild sommar, vilket skulle minska kylbehovet.",
-        ],
+        type: "highlight",
+        text: "Det säkraste sättet att veta när det är billigt är inte att gissa – det är att kolla timprognosen för ditt elområde.",
       },
       {
         type: "paragraph",
-        text: "Sammanfattningsvis: elpriserna är höga just nu på grund av en perfekt storm av låga vattennivåer, underhållsavställningar, hög europeisk efterfrågan och höga koldioxidpriser. Men förutsättningarna pekar på en normalisering under andra halvåret 2025. Tills dess är det smartaste du kan göra att anpassa din förbrukning och hålla koll på prognosen.",
+        text: "Sammanfattningsvis: elpriset är högt just nu på grund av ett tajt utbud och hög efterfrågan, både i Sverige och i Europa. I stället för att vänta på att marknaden ska ändra sig kan du anpassa din förbrukning och hålla koll på prognosen.",
       },
       {
         type: "link",
@@ -268,16 +270,24 @@ export const articles: ArticleData[] = [
     ],
     faq: [
       {
-        q: "Hur länge kommer elpriserna att vara höga?",
-        a: "Det är svårt att säga exakt, men historiska mönster tyder på att priserna normalt sett sjunker under sommaren tack vare vårflod och lägre uppvärmningsbehov. De långsiktiga drivkrafterna – energiomställningen och europeisk efterfrågan – kommer dock att fortsätta påverka marknaden.",
+        q: "Varför är elpriset så högt just nu?",
+        a: "Oftast är det en kombination: låg vattenkraft, kärnkraftsavställningar, lite vind och hög efterfrågan från Europa. Eftersom Sveriges marknad är kopplad till kontinenten smittar europeiska priser av sig.",
       },
       {
-        q: "Är fastpris eller rörligt pris bäst nu?",
-        a: "När spotpriserna är höga tenderar fastprisavtal att vara ännu dyrare, eftersom elhandlare tar en riskpremie. Rörligt pris (spotpris) är historiskt sett det billigare alternativet över tid, även under perioder med höga priser.",
+        q: "Hur länge kommer elpriserna att vara höga?",
+        a: "Det går inte att säga säkert. Priset varierar kraftigt från dygn till dygn beroende på väder och tillgänglig produktion. Historiskt sjunker det oftast när vind och vattenkraft ökar och uppvärmningsbehovet minskar.",
+      },
+      {
+        q: "Är fastpris eller rörligt (spotpris) bäst nu?",
+        a: "När spotpriserna är höga tenderar fastpris att vara ännu dyrare, eftersom elhandlaren tar en riskpremie. Rörligt pris har historiskt varit billigare över tid.",
       },
       {
         q: "Påverkas hela Sverige lika mycket?",
         a: "Nej. Södra Sverige (SE3 och SE4) påverkas betydligt mer än norra Sverige (SE1 och SE2). Prisskillnaden kan vara 2–3 gånger under höglasttimmar.",
+      },
+      {
+        q: "Var ser jag dagens pris i mitt elområde?",
+        a: "På prognosel.energy/elpriser ser du realtidspriser för alla fyra elområden. För din egen zon hittar du SE3 och SE4 på prognosel.energy/elpriser/se3 respektive /elpriser/se4.",
       },
     ],
   },
