@@ -8,7 +8,7 @@ import {
   type Recipient,
 } from "@/lib/push/audience";
 import { sendPush, type PushMessage } from "@/lib/push/expo";
-import { claimKey, maySendUnguardedDigest } from "@/lib/push/claims";
+import { claimKey, maySendUnguarded } from "@/lib/push/claims";
 import { windowAlert } from "@/lib/push/messages";
 import { stockholmDateKey } from "@/lib/streak";
 import { bestContiguousWindow, hourLabel } from "@/lib/windows";
@@ -220,8 +220,28 @@ export async function GET(request: NextRequest) {
     }
 
     if (timelyMessages.length > 0) {
-      const outcome = await sendPush(timelyMessages);
-      actions.push(`window: sent ${outcome.sent}, failed ${outcome.failed}`);
+      // Claimed for the hour, not for the run: "the window starts next hour" is
+      // true for every invocation inside the hour before that window, and a
+      // five-minute schedule has twelve of them. Without this the user gets the
+      // same alert a dozen times — the failure mode the digest already had.
+      const claim = await claimOnce(
+        claimKey("window_alert", `${today}:${String(hour).padStart(2, "0")}`),
+        `sent from the ${stamp} run`
+      );
+
+      if (claim === "taken") {
+        actions.push("window: already sent this hour, skipped");
+      } else if (claim === "no-guard" && !maySendUnguarded(hour, minute, hour)) {
+        actions.push(
+          `window: held back at ${stamp} — no guard, and not the hour's first run`
+        );
+      } else {
+        const outcome = await sendPush(timelyMessages);
+        actions.push(
+          `window: sent ${outcome.sent}, failed ${outcome.failed}` +
+            (claim === "no-guard" ? " (unguarded — apply the push_state migration)" : "")
+        );
+      }
     }
 
     if (digestMessages.length > 0) {
@@ -235,7 +255,7 @@ export async function GET(request: NextRequest) {
         actions.push("digest: already sent today, skipped");
       } else if (
         claim === "no-guard" &&
-        !maySendUnguardedDigest(hour, MORNING_START)
+        !maySendUnguarded(hour, minute, MORNING_START)
       ) {
         // No claim and not the first morning hour: sending would repeat the digest
         // on every remaining morning run. Held back rather than duplicated, and
@@ -306,7 +326,7 @@ export async function GET(request: NextRequest) {
           actions.push("weekly: already sent this week, skipped");
         } else if (
           claim === "no-guard" &&
-          !maySendUnguardedDigest(hour, MORNING_START)
+          !maySendUnguarded(hour, minute, MORNING_START)
         ) {
           // Same reasoning as the digest, and it matters more: on an hourly
           // schedule a Sunday has 24 runs, not 7.

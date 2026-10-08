@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { claimKey, maySendUnguardedDigest } from "./claims.ts";
+import { claimKey, maySendUnguarded } from "./claims.ts";
 
 test("a retried run on the same morning is the same claim, so only one sends", () => {
   assert.equal(
@@ -24,25 +24,32 @@ test("the daily and the weekly claim never collide on the same day", () => {
   );
 });
 
-// The unguarded path has no memory, so on an hourly schedule it would fire on
-// every morning run unless something bounds it. These are the bounds.
+// The unguarded path has no memory, and every message here is true for a span of
+// time rather than an instant. These are the bounds that keep it to one send.
 
-test("an unguarded digest goes out in exactly one of the morning's hours", () => {
-  const morningHours = [5, 6, 7, 8, 9, 10, 11];
-  const allowed = morningHours.filter((hour) =>
-    maySendUnguardedDigest(hour, 5)
+test("a five-minute schedule sends an unguarded message exactly once an hour", () => {
+  const everyFiveMinutes = [0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55];
+  const allowed = everyFiveMinutes.filter((minute) =>
+    maySendUnguarded(13, minute, 13)
   );
+
+  assert.deepEqual(allowed, [0]);
+});
+
+test("an unguarded message never goes out in an hour it is not allowed in", () => {
+  for (const hour of [0, 4, 12, 14, 18, 23]) {
+    assert.equal(maySendUnguarded(hour, 0, 5), false, `hour ${hour}`);
+  }
+});
+
+test("the digest's unguarded fallback is confined to the morning's first hour", () => {
+  const morningHours = [5, 6, 7, 8, 9, 10, 11];
+  const allowed = morningHours.filter((hour) => maySendUnguarded(hour, 0, 5));
 
   assert.deepEqual(allowed, [5]);
 });
 
-test("an unguarded digest never goes out outside the morning", () => {
-  for (const hour of [0, 4, 12, 13, 18, 23]) {
-    assert.equal(maySendUnguardedDigest(hour, 5), false, `hour ${hour}`);
-  }
-});
-
-test("the bound follows the start of the morning, not a hardcoded hour", () => {
-  assert.equal(maySendUnguardedDigest(4, 4), true);
-  assert.equal(maySendUnguardedDigest(5, 4), false);
+test("the bound follows the hour it is allowed in, not a hardcoded one", () => {
+  assert.equal(maySendUnguarded(4, 0, 4), true);
+  assert.equal(maySendUnguarded(5, 0, 4), false);
 });
