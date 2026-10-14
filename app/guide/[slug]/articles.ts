@@ -294,14 +294,14 @@ export const articles: ArticleData[] = [
 
   {
     slug: "billigaste-timmen",
-    title: "Bästa timmen att köra tvätt & diskmaskin 2025",
+    title: "Bästa timmen att köra tvätt & diskmaskin",
     description:
-      "Praktiska tips för att planera energitunga hushållssysslor. Spara hundratals kronor per år genom att välja rätt timme med hjälp av realtidspriser och AI-prognoser.",
+      "När är elen billigast? Tajma tvätt, disk och elbilsladdning mot nattens billigaste timmar – med dagens priser och morgondagens 24h-prognos.",
     keywords: ["billigaste eltimme", "när är elen billigast", "tvätta billigt", "elpris natt", "spara el"],
     category: "Sparande",
     readTime: "5 min",
     published: "2025-06-02",
-    updated: "2025-06-02",
+    updated: "2026-10-14",
     toc: [
       { id: "dygnets-billigaste-timmar", text: "Dygnets billigaste timmar", level: 2 },
       { id: "hur-mycket-sparar-du", text: "Hur mycket sparar du?", level: 2 },
@@ -312,7 +312,7 @@ export const articles: ArticleData[] = [
     content: [
       {
         type: "paragraph",
-        text: "Visste du att du kan spara över 1 000 kronor per år bara genom att flytta tvätten några timmar? Med timprisavtal (spotpris) varierar elpriset kraftigt under dygnet – ibland med över 100% mellan dyraste och billigaste timmen. Här är den kompletta guiden till när du ska köra dina energitunga apparater.",
+        text: "Elen är som billigast nattetid, vanligen 02:00–06:00, och dyrast i kvällsrusningen 17:00–20:00. Ställ tvätt och disk på timer till natten och ladda elbilen då, så sparar du oftast mest – skillnaden kan vara 50–100%. Kolla dagens priser eller morgondagens prognos innan du startar.",
       },
       { type: "heading", text: "Dygnets billigaste timmar", level: 2 },
       {
@@ -440,6 +440,11 @@ export const articles: ArticleData[] = [
         type: "link",
         href: "/elpriser",
         label: "Se aktuella priser per timme →",
+      },
+      {
+        type: "link",
+        href: "/guide/elpriser-2025/",
+        label: "Läs: varför är elpriset högt just nu →",
       },
     ],
     faq: [
